@@ -1,0 +1,18 @@
+[
+  {
+    "corridor": "EUR-KES",
+    "destination_country": "KE",
+    "type": "fixed",
+    "value": 40.0,
+    "currency": "EUR",
+    "notes": "Comisión fija de demo; supuesto explícito"
+  },
+  {
+    "corridor": "EUR-GHS",
+    "destination_country": "GH",
+    "type": "fixed",
+    "value": 35.0,
+    "currency": "EUR",
+    "notes": "Comisión fija de demo para corredor secundario"
+  }
+]

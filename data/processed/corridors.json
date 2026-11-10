@@ -1,0 +1,18 @@
+[
+  {
+    "origin": "EUR",
+    "origin_country": "ES",
+    "destination_country": "KE",
+    "currency": "KES",
+    "label": "España → Kenia (KES)",
+    "demo": true
+  },
+  {
+    "origin": "EUR",
+    "origin_country": "ES",
+    "destination_country": "GH",
+    "currency": "GHS",
+    "label": "España → Ghana (GHS)",
+    "demo": false
+  }
+]

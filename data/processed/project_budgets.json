@@ -1,0 +1,28 @@
+[
+  {
+    "project_id": "KE-HEALTH-001",
+    "name": "Proyecto Salud Comunitaria — Kenia",
+    "destination_country": "KE",
+    "currency": "KES",
+    "items": [
+      { "name": "Transporte y logística", "amount_local": 320000, "priority": "alta" },
+      { "name": "Materiales y suministros médicos", "amount_local": 450000, "priority": "alta" },
+      { "name": "Alimentación y apoyo a beneficiarios", "amount_local": 280000, "priority": "media" },
+      { "name": "Personal local y formación", "amount_local": 250000, "priority": "media" },
+      { "name": "Operaciones y coordinación", "amount_local": 144200, "priority": "media" }
+    ],
+    "notes": "Presupuesto de ejemplo curado/sintético (sin datos reales sensibles). Total base de referencia ~1.444.200 KES."
+  },
+  {
+    "project_id": "GH-EDU-001",
+    "name": "Proyecto Educación — Ghana",
+    "destination_country": "GH",
+    "currency": "GHS",
+    "items": [
+      { "name": "Material educativo", "amount_local": 25000, "priority": "alta" },
+      { "name": "Formación docente", "amount_local": 18000, "priority": "alta" },
+      { "name": "Infraestructura y logística", "amount_local": 15000, "priority": "media" }
+    ],
+    "notes": "Corredor secundario precargado (agnosticismo por datos)."
+  }
+]

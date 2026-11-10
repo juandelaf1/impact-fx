@@ -1,0 +1,20 @@
+[
+  {
+    "base": "EUR",
+    "quote": "KES",
+    "rate": 145.0,
+    "date": "2026-11-12",
+    "source": "demo_reference",
+    "is_mock": true,
+    "notes": "Tasa de referencia ficticia para demo"
+  },
+  {
+    "base": "EUR",
+    "quote": "GHS",
+    "rate": 12.85,
+    "date": "2026-11-12",
+    "source": "demo_reference",
+    "is_mock": true,
+    "notes": "Corredor secundario precargado (agnosticismo por datos)"
+  }
+]

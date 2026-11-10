@@ -1,0 +1,48 @@
+[
+  {
+    "id": "B1",
+    "description": "Caso feliz EUR→KES: 10.000 EUR, fee 40 EUR, caída 3%",
+    "inputs": {
+      "amount_eur": 10000,
+      "base": "EUR",
+      "quote": "KES",
+      "destination_country": "KE",
+      "fee_eur": 40,
+      "variation_pct": -3
+    },
+    "expected": {
+      "reference_rate": 145.0,
+      "stressed_rate": 140.65,
+      "net_amount_eur": 9960,
+      "scenarios": [
+        { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 1444200, "currency": "KES" },
+        { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 1400874, "currency": "KES" }
+      ],
+      "difference": { "amount": 43326, "currency": "KES" },
+      "assumptions": ["Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)", "Comisión fija 40 EUR"],
+      "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"]
+    }
+  },
+  {
+    "id": "B4",
+    "description": "Corredor secundario EUR→GHS (verificación de agnosticismo por datos)",
+    "inputs": {
+      "amount_eur": 5000,
+      "base": "EUR",
+      "quote": "GHS",
+      "destination_country": "GH",
+      "fee_eur": 35,
+      "variation_pct": -3
+    },
+    "expected": {
+      "reference_rate": 12.85,
+      "stressed_rate": 12.4645,
+      "net_amount_eur": 4965,
+      "scenarios": [
+        { "name": "base", "rate": 12.85, "fee_eur": 35, "amount_received": 63800.25, "currency": "GHS" },
+        { "name": "stress_-3%", "rate": 12.4645, "fee_eur": 35, "amount_received": 61886.2425, "currency": "GHS" }
+      ],
+      "difference": { "amount": 1914.0075, "currency": "GHS" }
+    }
+  }
+]
