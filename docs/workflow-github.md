@@ -26,11 +26,9 @@
 ## Issues, PRs y Project (seguimiento)
 - Crear **issues** por tarea del backlog (`docs/backlog.md`) con etiquetas (p.ej. `must`, `should`, `backend`, `frontend`, `agent`, `data`, `docs`) y responsable.
 - En cada PR incluir `Closes #N` (o `Refs #N`) para vincular y cerrar automáticamente el issue al merge. **Con `Closes #N` el issue se cierra solo al mergear**; con `Refs #N` solo se referencia.
-- **GitHub Project (v2):** https://github.com/users/juandelaf1/projects/4 — *Impact FX - Reto Ebury*.
+- **GitHub Project (v2):** https://github.com/users/juandelaf1/projects/4 — *Impact FX - Reto Ebury* (simplificado para un hackathon de 1 día).
   - **Campos:** `Status` (Todo / In Progress / In Review / Blocked / Done), `Priority` (Must / Should / Could), `Area` (Backend / Frontend / Agent / Data / Docs / DevOps), `Owner` (Juan / Laura / Gema / Jose / Todos).
-  - Contiene los issues #1, #2, #4, #5, #6, #7, #8, #9 y #16 con los campos ya rellenados.
-  - **Vistas:** `Tabla - Sprint Impact FX`, `Tablero - Kanban` (columnas por `Status`) y `Roadmap - Sprint del reto`.
-  - **Campos de temporalizacion:** `Inicio` y `Fin` (fechas) e `Iteracion` (iteraciones: *Preparacion (11 nov)* y *Reto - Dia D (12 nov)*). El Roadmap se construye sobre la iteracion; GitHub guarda las fechas a nivel de dia, asi que el detalle horario (T+00:00, T+01:30...) vive en los titulos de los sub-issues (#17-#21) y en `docs/day-of-execution-guide.md`.
+  - **Vistas:** `Tabla - Sprint Impact FX` y `Tablero - Kanban` (columnas por `Status`). Sin roadmap/fechas/iteraciones: el detalle horario vive en `docs/day-of-execution-guide.md` y en los títulos de los issues.
   - Enlazado al repositorio (`juandelaf1/impact-fx`), por lo que los issues y PRs aparecen en la pestaña **Development** del repo.
-  - Automatización native (Projects > Workflows): al cerrar un issue → `Status = Done`; al mergear un PR con `Closes #N` → el issue pasa a `Done`.
+  - Automatización nativa (Projects > Workflows): al cerrar un issue → `Status = Done`; al mergear un PR con `Closes #N` → el issue pasa a `Done`. Use el tablero para mover issues a `In Progress`/`In Review` durante la sesión.
 - Mantener `docs/backlog.md` y el Project alineados en los hitos principales.
