@@ -107,7 +107,15 @@ with st.form("transfer_form"):
 # PROCESS TRANSFER
 # --------------------------------------------------
 
-if submitted:
+if submitted and fee_eur >= amount_eur:
+    st.session_state.pop("results", None)
+    st.session_state.pop("demo_mode", None)
+    st.session_state.pop("connection_error", None)
+    st.error(
+        "The transfer fee must be lower than the transfer amount."
+    )
+
+if submitted and fee_eur < amount_eur:
 
     context = {
         "amount_eur": amount_eur,

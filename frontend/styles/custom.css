@@ -1,69 +1,168 @@
 
-/* Estilos generales */
+/* ==========================================
+   IMPACT FX — DESIGN SYSTEM
+   ========================================== */
+
+/* Colores principales:
+   Verde oscuro: #153B30
+   Verde principal: #176B59
+   Verde suave: #DCEFE4
+   Fondo: #F3F6F3
+   Texto: #20352D
+*/
+
+/* ESTILOS GENERALES */
+
 .stApp {
-    background-color: #f5f7f6;
+    background-color: #F3F6F3;
+    color: #20352D;
 }
 
 .block-container {
-    max-width: 1100px;
-    padding-top: 2rem;
+    max-width: 1180px;
+    padding-top: 2.5rem;
     padding-bottom: 3rem;
 }
 
-/* Cabecera */
+/* CABECERA */
+
 .main-header {
-    background: linear-gradient(120deg, #103c36, #176b59);
-    padding: 2.5rem 3rem;
-    border-radius: 18px;
+    background: linear-gradient(120deg, #102F28, #176B59);
+    padding: 2.8rem 3rem;
+    border-radius: 22px;
     color: white;
     margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(16, 47, 40, 0.12);
 }
 
 .main-header h1 {
-    font-size: 3.2rem;
+    font-size: 3rem;
     font-weight: 750;
+    letter-spacing: -1.5px;
     margin: 0.5rem 0;
     color: white;
 }
 
 .main-header h1 span {
-    color: #a8e6c5;
+    color: #A8E6C5;
 }
 
 .main-header .eyebrow {
-    color: #a8e6c5;
+    color: #A8E6C5;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 .main-header .subtitle {
-    color: #e0eee9;
+    color: #E0EEE9;
     font-size: 1.05rem;
+    line-height: 1.6;
     max-width: 650px;
 }
 
-/* Formulario */
+/* FORMULARIO */
+
 div[data-testid="stForm"] {
-    background-color: white;
-    padding: 1.5rem;
-    border: 1px solid #e0e8e3;
-    border-radius: 14px;
+    background-color: #FFFFFF;
+    padding: 1.8rem;
+    border: 1px solid #E1E9E3;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(21, 59, 48, 0.04);
 }
 
-/* Botón */
+/* CAMPOS DE ENTRADA */
+
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox [data-baseweb="select"] {
+    border-radius: 10px;
+}
+
+/* ETIQUETAS */
+
+.stTextInput label,
+.stNumberInput label,
+.stSelectbox label {
+    color: #344C40;
+    font-weight: 600;
+}
+
+/* BOTONES */
+
 .stButton button,
 div[data-testid="stFormSubmitButton"] button {
-    background-color: #176b59;
+    background-color: #176B59;
     color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
-    font-weight: 600;
-    min-height: 45px;
+    font-weight: 650;
+    min-height: 46px;
+    padding: 0.5rem 1.4rem;
+    transition: background-color 0.2s ease;
 }
 
 .stButton button:hover,
 div[data-testid="stFormSubmitButton"] button:hover {
-    background-color: #104d40;
+    background-color: #104D40;
     color: white;
+    border: none;
+}
+
+/* MÉTRICAS */
+
+div[data-testid="stMetric"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E1E9E3;
+    border-radius: 16px;
+    padding: 1.2rem;
+    box-shadow: 0 3px 12px rgba(21, 59, 48, 0.04);
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #64766B;
+    font-weight: 600;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #153B30;
+    font-weight: 750;
+}
+
+/* EXPANSORES */
+
+div[data-testid="stExpander"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E1E9E3;
+    border-radius: 12px;
+}
+
+/* SEPARADORES */
+
+hr {
+    border-color: #E1E9E3;
+}
+
+/* AVISOS */
+
+div[data-testid="stAlert"] {
+    border-radius: 12px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+    .block-container {
+        padding: 1rem;
+    }
+
+    .main-header {
+        padding: 1.8rem;
+        border-radius: 16px;
+    }
+
+    .main-header h1 {
+        font-size: 2.2rem;
+    }
 }
