@@ -37,7 +37,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|
 | A1 | Implementar `get_fx_reference(base, quote, date?)` leyendo `data/processed/fx_rates.json` | Devuelve `{rate,source,date,is_mock}` para EUR→KES |
 | A2 | Implementar `calculate_transfer_scenarios(amount_eur, rate, fee_eur, variations[])` | Cálculo exacto: neto 9960, base 1.444.200, −3% 1.400.874, Δ 43.326 |
-| A3 | Definir/ajustar **system prompt** (rol, ámbito ODS 10,17 + sensibilidad a impacto desigual/brecha según contexto, límites, criterios de decisión, obligación de declarar supuestos/fuente) | Prompt en `docs/agent-design.md` y cargado por el backend |
+| A3 | Definir/ajustar **system prompt** (rol, ámbito ODS 9, 10, 17 + sensibilidad a impacto desigual/brecha según contexto, límites, criterios de decisión, obligación de declarar supuestos/fuente) | Prompt en `docs/agent-design.md` y cargado por el backend |
 | A4 | Configurar definiciones de tools (JSON schema de parámetros) para *function calling* | LLM recibe las 2 tools con firmas correctas |
 
 **Pista B — Backend & API (Juan, apoyo Gema)**
@@ -84,7 +84,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|---|
 | 1 | Desplegar backend y frontend, configurar env/CORS en hosting, smoke test en URL | José, Juan | URL operativa (o activar plan B si falla en ≤20–30 min) |
 | 2 | Completar `README.md` (instalación, `.env`, ejecución, uso, URL) | José | Reproducible |
-| 3 | Cerrar `docs/ods-justification.md` (ODS 10,17 y aporte) | José | Justificación clara |
+| 3 | Cerrar `docs/ods-justification.md` (ODS 9, 10, 17 y aporte) | José | Justificación clara |
 | 4 | Cerrar doc técnica: stack, endpoints, prompts, **system prompt**, descripción de cada tool (parámetros) | Gema, José | Requisito 5.1/entregable cubierto |
 | 5 | Completar `docs/interactions.md` con ≥3 interacciones reales y razonamiento | José, Gema | Entregable cubierto |
 | 6 | Commits finales descriptivos y push a `main` | Todos | Repo actualizado |

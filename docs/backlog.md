@@ -10,7 +10,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 | M2 | Repo + estructura + `.gitignore` + `.env.example` + docs base | José Melo | M1 | [ ] | Estructura commiteada, equipo con acceso |
 | M3 | Datos procesados y validados (fx_rates, fee_rules, corridors, project_budgets, `demo_scenarios` EUR→KES) | José Melo | M2 | [ ] | Golden case correcto (1.444.200 / 1.400.874 / Δ 43.326 KES) y esquemas coherentes |
 | M4 | Contratos congelados: API (`/health`,`/chat`) y firmas de tools | Gema, Juan | M1 | [ ] | `docs/api-contract.md` y `shared/contracts/` acordados |
-| M5 | System prompt final (rol, ámbito ODS 10,17 + sensibilidad impacto/brecha, límites, criterios de decisión) | Gema | M1,M4 | [ ] | Documentado en `docs/agent-design.md`; validado con mentores |
+| M5 | System prompt final (rol, ámbito ODS 9, 10, 17 + sensibilidad impacto/brecha, límites, criterios de decisión) | Gema | M1,M4 | [ ] | Documentado en `docs/agent-design.md`; validado con mentores |
 | M6 | Implementar `get_fx_reference` (lee fixture, devuelve `rate,source,date,is_mock`) | Gema | M3,M4 | [ ] | Retorna tasa EUR→KES correcta desde `fx_rates.json` |
 | M7 | Implementar `calculate_transfer_scenarios` (base, variación, diferencia) | Gema | M3,M4 | [ ] | Coincide con `demo_scenarios.json` (B1) |
 | M8 | Backend: `GET /api/health`, `POST /api/chat` con validación, cliente LLM y orquestación *function calling* | Juan | M4,M5,M6,M7 | [ ] | Llama al LLM, ejecuta tools y devuelve respuesta integrada + errores estandarizados |

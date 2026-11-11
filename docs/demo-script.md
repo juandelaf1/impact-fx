@@ -3,7 +3,7 @@
 ## Estructura y tiempos
 | Bloque | Tiempo | Contenido | Responsable sugerido |
 |---|---:|---|---|
-| 1. Problema y ODS | 1:30 | Contexto: ONG envía fondos y no sabe cuánto llega; impacto en partidas. ODS 10 y 17, valor para coordinación con socio local y sensibilidad al impacto desigual | José / equipo |
+| 1. Problema y ODS | 1:30 | Contexto: ONG envía fondos y no sabe cuánto llega; impacto en partidas. ODS 9, 10 y 17, valor para coordinación con socio local y sensibilidad al impacto desigual | José / equipo |
 | 2. Solución y diseño del agente | 2:00 | Qué hace Impact FX. Arquitectura (FE/BE REST). **System prompt** (rol, ámbito, límites), **2 tools** y criterios de decisión (petición → decisión → tools → respuesta integrada) | Gema / Juan |
 | 3. Demo en vivo (núcleo) | 3:00 | Caso Kenia en la app: mostrar petición, ejecución de tools (`tools_used`), escenarios, diferencia, supuestos/fuente y respuesta integrada en UI | Laura (UI) + José (narración) |
 | 4. Técnico y retos | 1:30 | Stack, endpoints, datos deterministas/agnósticos, decisiones clave, desafíos y cómo se resolvieron | Juan / Gema |

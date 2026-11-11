@@ -2,7 +2,7 @@
 
 Agente de IA que ayuda a ONG a estimar cuánto dinero recibe realmente su socio local en una transferencia internacional, comparando escenarios de tipo de cambio y comisiones e integrando el resultado en una respuesta clara.
 
-- **ODS:** 10 (Reducción de las desigualdades) y 17 (Alianzas para lograr los objetivos).
+- **ODS:** 9 (Industria, innovación e infraestructura), 10 (Reducción de las desigualdades) y 17 (Alianzas para lograr los objetivos).
 - **Caso demo (MVP):** 10.000 EUR → Kenia (KES), comisión 40 EUR, tasa ref. 145 KES/EUR (ficticia, identificada), variación −3%.
   - Base: **1.444.200 KES** · Estrés (−3%): **1.400.874 KES** · Diferencia: **43.326 KES**.
 
@@ -61,7 +61,7 @@ cd frontend
 Detalle completo en [`docs/api-contract.md`](docs/api-contract.md).
 
 ## Agente y herramientas
-- **System prompt:** rol, ámbito (ODS 10,17; sensibilidad al impacto desigual), límites y criterios de decisión. Ver [`docs/agent-design.md`](docs/agent-design.md).
+- **System prompt:** rol, ámbito (ODS 9, 10, 17; sensibilidad al impacto desigual), límites y criterios de decisión. Ver [`docs/agent-design.md`](docs/agent-design.md).
 - **Tools (function calling):**
   - `get_fx_reference(base, quote, date?)` → tasa de referencia desde fixtures (`rate, source, date, is_mock`).
   - `calculate_transfer_scenarios(amount_eur, rate, fee_eur, variations[])` → escenarios, importes recibidos y diferencia.

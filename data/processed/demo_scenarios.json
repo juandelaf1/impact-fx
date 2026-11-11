@@ -1,7 +1,7 @@
 [
   {
     "id": "B1",
-    "description": "Caso feliz EUR→KES: 10.000 EUR, fee 40 EUR, caída 3%",
+    "description": "Caso feliz EUR→KES: 10.000 EUR, fee 40 EUR, caída 3% (demo principal)",
     "inputs": {
       "amount_eur": 10000,
       "base": "EUR",
@@ -19,6 +19,54 @@
         { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 1400874, "currency": "KES" }
       ],
       "difference": { "amount": 43326, "currency": "KES" },
+      "assumptions": ["Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)", "Comisión fija 40 EUR"],
+      "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"]
+    }
+  },
+  {
+    "id": "B1b",
+    "description": "Mejora evaluación: mismo caso Kenia con caída 5%",
+    "inputs": {
+      "amount_eur": 10000,
+      "base": "EUR",
+      "quote": "KES",
+      "destination_country": "KE",
+      "fee_eur": 40,
+      "variation_pct": -5
+    },
+    "expected": {
+      "reference_rate": 145.0,
+      "stressed_rate": 137.75,
+      "net_amount_eur": 9960,
+      "scenarios": [
+        { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 1444200, "currency": "KES" },
+        { "name": "stress_-5%", "rate": 137.75, "fee_eur": 40, "amount_received": 1371990, "currency": "KES" }
+      ],
+      "difference": { "amount": 72210, "currency": "KES" },
+      "assumptions": ["Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)", "Comisión fija 40 EUR"],
+      "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"]
+    }
+  },
+  {
+    "id": "B1c",
+    "description": "Mejora evaluación: distinto monto EUR→KES (5.000 EUR, caída 3%)",
+    "inputs": {
+      "amount_eur": 5000,
+      "base": "EUR",
+      "quote": "KES",
+      "destination_country": "KE",
+      "fee_eur": 40,
+      "variation_pct": -3
+    },
+    "expected": {
+      "reference_rate": 145.0,
+      "stressed_rate": 140.65,
+      "net_amount_eur": 4960,
+      "scenarios": [
+        { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 719200, "currency": "KES" },
+        { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 697624, "currency": "KES" }
+      ],
+      "difference": { "amount": 21576, "currency": "KES" },
       "assumptions": ["Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)", "Comisión fija 40 EUR"],
       "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"]
     }
@@ -43,6 +91,35 @@
         { "name": "stress_-3%", "rate": 12.4645, "fee_eur": 35, "amount_received": 61886.2425, "currency": "GHS" }
       ],
       "difference": { "amount": 1914.0075, "currency": "GHS" }
+    }
+  },
+  {
+    "id": "B5",
+    "description": "Mejora evaluación: comisión no indicada, se aplica regla de demo (supuesto explícito)",
+    "inputs": {
+      "amount_eur": 10000,
+      "base": "EUR",
+      "quote": "KES",
+      "destination_country": "KE",
+      "fee_eur": null,
+      "fee_rule_applied": "EUR-KES",
+      "variation_pct": -3
+    },
+    "expected": {
+      "reference_rate": 145.0,
+      "stressed_rate": 140.65,
+      "net_amount_eur": 9960,
+      "applied_fee_eur": 40,
+      "scenarios": [
+        { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 1444200, "currency": "KES" },
+        { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 1400874, "currency": "KES" }
+      ],
+      "difference": { "amount": 43326, "currency": "KES" },
+      "assumptions": [
+        "Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)",
+        "Comisión no indicada: se aplica regla EUR-KES (40 EUR, fijo)"
+      ],
+      "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"]
     }
   }
 ]

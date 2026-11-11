@@ -1,7 +1,7 @@
 # Benchmark y evaluación — Impact FX
 
 ## 1. Objetivo
-Verificar que el agente **funciona, decide correctamente, usa herramientas y aporta valor** (ODS 10,17), cumpliendo requisitos del briefing.
+Verificar que el agente **funciona, decide correctamente, usa herramientas y aporta valor** (ODS 9, 10, 17), cumpliendo requisitos del briefing.
 
 ## 2. Golden case (fuente de verdad)
 `data/processed/demo_scenarios.json` — **B1 (EUR→KES):** 10.000 EUR, fee 40, tasa 145, variación −3%.
@@ -26,7 +26,7 @@ Verificar que el agente **funciona, decide correctamente, usa herramientas y apo
 | Robustez y ámbito | Datos faltantes, límites | B2, B3, B5 | No inventa, no ejecuta pagos, declara supuestos |
 | Trazabilidad | Supuestos y fuente de tasa | `assumptions`, `rate/source/date/is_mock` | Siempre presentes en simulación |
 | Rendimiento demo | Tiempo/estabilidad | Ejecución en vivo | Respuesta en tiempo razonable; fallback si falla |
-| Entregables/ODS | Completitud | Checklist briefing | README, ODS 10/17, prompt/tools, ≥3 interacciones, URL/plan B |
+| Entregables/ODS | Completitud | Checklist briefing | README, ODS 9, 10 y 17, prompt/tools, ≥3 interacciones, URL/plan B |
 
 ## 5. Procedimiento de ejecución (día D)
 1. Tras integración (T+02:30), ejecutar B1 desde UI y comparar con golden case.

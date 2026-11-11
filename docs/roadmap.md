@@ -1,13 +1,13 @@
 # Roadmap — Impact FX
 
 ## Visión
-Entregar un MVP demostrable que cumpla todos los requisitos del reto: agente con decisión y herramientas, arquitectura cliente-servidor REST, respuesta integrada, ODS 10/17 y entregables completos.
+Entregar un MVP demostrable que cumpla todos los requisitos del reto: agente con decisión y herramientas, arquitectura cliente-servidor REST, respuesta integrada, ODS 9, 10 y 17 y entregables completos.
 
 ## Fases y cronograma
 
 ### Fase 0 — Descubrimiento y alineación (completada / confirmar)
 - **Objetivo:** idea, ODS, equipo y problema.
-- **Salida:** Impact FX elegido, ODS 10,17, Grupo 1 y roles propuestos.
+- **Salida:** Impact FX elegido, ODS 9, 10, 17, Grupo 1 y roles propuestos.
 - **Estado:** [x] Propuesto / [ ] Confirmado por el equipo.
 
 ### Fase 1 — Preparación (antes del jueves) — CRÍTICA
