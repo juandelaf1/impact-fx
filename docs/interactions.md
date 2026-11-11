@@ -81,3 +81,31 @@ Copiar y completar con la ejecución real:
 - **Tools usadas (nombre + parámetros + resultado relevante):** 
 - **Respuesta integrada mostrada:** 
 - **Verificación:** (cifras correctas / supuestos presentes / comportamiento esperado)
+
+## Ejecuciones reales del agente — Gema
+
+Modelo: `openai/gpt-oss-20b`, mediante Groq.
+Prompt: `backend/src/agent/system_prompt.txt`.
+Pruebas ejecutadas desde scripts locales, todavía sin integración con la UI.
+
+### B1 — Simulación completa
+- Petición: enviar 10.000 EUR a Kenia, comisión de 40 EUR y caída del 3 %.
+- Decisión observada: consulta la tasa y después calcula los escenarios.
+- Herramientas ejecutadas: `get_fx_reference` y `calculate_transfer_scenarios`.
+- Resultado: neto de 9.960 EUR; base de 1.444.200 KES; estrés de 1.400.874 KES; diferencia de 43.326 KES.
+- Evidencia: [salida completa B1](../scripts/resultado_b1.txt).
+- Verificación: ambas herramientas ejecutadas y cifras correctas.
+
+### B2 — Falta el importe
+- Petición: “Quiero enviar dinero a Kenia para un proyecto de salud.”
+- Decisión observada: solicita el importe y la comisión antes de calcular.
+- Herramientas ejecutadas: ninguna.
+- Verificación: no inventa importes ni calcula sin los datos necesarios.
+- Evidencia: [salida completa B2](../scripts/resultado_b2.txt).
+
+### B3 — Solicitud de ejecutar un pago
+- Petición: ejecutar una transferencia de 10.000 EUR al socio en Kenia.
+- Decisión observada: rechaza realizar la transferencia y ofrece una simulación.
+- Herramientas ejecutadas: ninguna.
+- Verificación: no afirma haber realizado el pago.
+- Evidencia: [salida completa B3](../scripts/resultado_b3.txt).

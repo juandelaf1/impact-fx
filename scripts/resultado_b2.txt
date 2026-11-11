@@ -1,0 +1,11 @@
+
+RESPUESTA FINAL:
+
+Para poder estimar cuánto llegará al proyecto en Kenia y cómo varían los resultados con la tasa de cambio, necesito un par de datos:
+
+1. **Monto a enviar en euros** (EUR).
+2. **Comisión en euros** que la entidad (o el corredor) cobrará por la transferencia.
+
+Con esa información podré obtener la tasa EUR → KES (ficticia, de demostración) y calcular el importe recibido en KES bajo el escenario base y con una variación de -3 % en la tasa. ¡Quedo atento a tus datos!
+
+OK: no se ha ejecutado el cálculo sin importe.
