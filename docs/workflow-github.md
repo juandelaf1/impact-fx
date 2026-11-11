@@ -30,6 +30,7 @@
   - **Campos:** `Status` (Todo / In Progress / In Review / Blocked / Done), `Priority` (Must / Should / Could), `Area` (Backend / Frontend / Agent / Data / Docs / DevOps), `Owner` (Juan / Laura / Gema / Jose / Todos).
   - Contiene los issues #1, #2, #4, #5, #6, #7, #8, #9 y #16 con los campos ya rellenados.
   - **Vistas:** `Tabla - Sprint Impact FX`, `Tablero - Kanban` (columnas por `Status`) y `Roadmap - Sprint del reto`.
+  - **Campos de temporalizacion:** `Inicio` y `Fin` (fechas) e `Iteracion` (iteraciones: *Preparacion (11 nov)* y *Reto - Dia D (12 nov)*). El Roadmap se construye sobre la iteracion; GitHub guarda las fechas a nivel de dia, asi que el detalle horario (T+00:00, T+01:30...) vive en los titulos de los sub-issues (#17-#21) y en `docs/day-of-execution-guide.md`.
   - Enlazado al repositorio (`juandelaf1/impact-fx`), por lo que los issues y PRs aparecen en la pestaña **Development** del repo.
   - Automatización native (Projects > Workflows): al cerrar un issue → `Status = Done`; al mergear un PR con `Closes #N` → el issue pasa a `Done`.
 - Mantener `docs/backlog.md` y el Project alineados en los hitos principales.
