@@ -25,6 +25,9 @@
 
 ## Issues, PRs y Project (seguimiento)
 - Crear **issues** por tarea del backlog (`docs/backlog.md`) con etiquetas (p.ej. `must`, `should`, `backend`, `frontend`, `agent`, `data`, `docs`) y responsable.
-- En cada PR incluir `Closes #N` (o `Refs #N`) para vincular y cerrar automáticamente el issue al merge.
-- Usar un **GitHub Project** (tabla/board) con campos Estado (Todo/In Progress/In Review/Done), Prioridad y Responsable; añadir issues/PRs y moverlos según avance (las automatizaciones nativas de Projects pueden actualizar estado al cerrar/mergear según configuración del proyecto).
+- En cada PR incluir `Closes #N` (o `Refs #N`) para vincular y cerrar automáticamente el issue al merge. **Con `Closes #N` el issue se cierra solo al mergear**; con `Refs #N` solo se referencia.
+- **GitHub Project (v2):** https://github.com/users/juandelaf1/projects/4 — *Impact FX - Reto Ebury*.
+  - **Campos:** `Status` (Todo / In Progress / In Review / Blocked / Done), `Priority` (Must / Should / Could), `Area` (Backend / Frontend / Agent / Data / Docs / DevOps), `Owner` (Juan / Laura / Gema / Jose / Todos).
+  - Contiene los issues #1, #2, #4, #5, #6, #7, #8 y #9 con los campos ya rellenados.
+  - Automatización native (Projects > Workflows): al cerrar un issue → `Status = Done`; al mergear un PR con `Closes #N` → el issue pasa a `Done`.
 - Mantener `docs/backlog.md` y el Project alineados en los hitos principales.
