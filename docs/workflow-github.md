@@ -28,6 +28,8 @@
 - En cada PR incluir `Closes #N` (o `Refs #N`) para vincular y cerrar automáticamente el issue al merge. **Con `Closes #N` el issue se cierra solo al mergear**; con `Refs #N` solo se referencia.
 - **GitHub Project (v2):** https://github.com/users/juandelaf1/projects/4 — *Impact FX - Reto Ebury*.
   - **Campos:** `Status` (Todo / In Progress / In Review / Blocked / Done), `Priority` (Must / Should / Could), `Area` (Backend / Frontend / Agent / Data / Docs / DevOps), `Owner` (Juan / Laura / Gema / Jose / Todos).
-  - Contiene los issues #1, #2, #4, #5, #6, #7, #8 y #9 con los campos ya rellenados.
+  - Contiene los issues #1, #2, #4, #5, #6, #7, #8, #9 y #16 con los campos ya rellenados.
+  - **Vistas:** `Tabla - Sprint Impact FX`, `Tablero - Kanban` (columnas por `Status`) y `Roadmap - Sprint del reto`.
+  - Enlazado al repositorio (`juandelaf1/impact-fx`), por lo que los issues y PRs aparecen en la pestaña **Development** del repo.
   - Automatización native (Projects > Workflows): al cerrar un issue → `Status = Done`; al mergear un PR con `Closes #N` → el issue pasa a `Done`.
 - Mantener `docs/backlog.md` y el Project alineados en los hitos principales.
