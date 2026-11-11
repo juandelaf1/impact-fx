@@ -2,7 +2,7 @@
 
 > **Estado:** congelado para el MVP. Cambios solo con acuerdo del equipo (D-007). Fuente compartida: [`../shared/contracts/contracts.md`](../shared/contracts/contracts.md).
 
-Base URL (local): `http://localhost:3001` (configurable por `PORT`). Frontend usa `VITE_API_BASE_URL`.
+Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend (Streamlit) usa `API_BASE_URL` para consumir la API.
 
 ## Endpoints
 

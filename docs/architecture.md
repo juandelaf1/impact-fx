@@ -6,7 +6,7 @@ Impact FX es una aplicación web con **agente de IA** que simula el impacto de u
 ## 2. Componentes
 | Componente | Responsabilidad | Tecnología (a confirmar, D-003) |
 |---|---|---|
-| **Frontend** (`frontend/`) | UI: formulario, estados, visualización de escenarios/diferencia/supuestos/alertas, consumo de API | React+Vite o HTML/JS (recomendado React+Vite) |
+| **Frontend** (`frontend/`) | UI: formulario, estados, visualización de escenarios/diferencia/supuestos/alertas, consumo de API | **Streamlit (Python)** |
 | **Backend** (`backend/`) | API REST, validación, orquestación del agente LLM, ejecución de tools, carga de datos | Node.js+Express o Python+FastAPI (recomendado Node.js+Express) |
 | **Agente (LLM)** (`backend/src/agent`) | Interpretar petición, decidir herramientas (*function calling*), integrar resultados | Proveedor con tool calling (Groq/OpenAI/Gemini, D-004) |
 | **Tools** (`backend/src/tools`) | Funciones deterministas invocadas por el agente | `get_fx_reference`, `calculate_transfer_scenarios` (+ `assess_budget_impact` Should) |
@@ -67,8 +67,8 @@ Impact FX es una aplicación web con **agente de IA** que simula el impacto de u
 
 ## 7. Seguridad y configuración
 - API keys solo en `.env` (excluido de git); `.env.example` documentado.
-- Validación/sanitización de inputs en backend (y básica en frontend).
-- CORS restringido al origen del frontend.
+- Validación/sanitización de inputs en backend (y básica en frontend Streamlit).
+- CORS configurado en backend (permitir origen del frontend si aplica; las llamadas de Streamlit al backend suelen ser servidor-a-servidor).
 - Sin ejecución de pagos ni acceso a sistemas bancarios; datos de demo curados/sintéticos.
 
 ## 8. Resiliencia y plan B

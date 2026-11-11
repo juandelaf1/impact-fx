@@ -24,7 +24,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 | 2 | Instalar dependencias back y front | Juan, Laura | Sin errores de instalación |
 | 3 | Configurar `.env` local (copiar de `.env.example`) y verificar clave LLM | Juan, Gema | Variable cargada, no en git |
 | 4 | Arrancar backend y comprobar `GET /api/health` | Juan | Responde `{ "status":"ok" }` |
-| 5 | Arrancar frontend y confirmar que carga (mock permitido en esta fase) | Laura | UI visible en navegador |
+| 5 | Arrancar frontend (Streamlit) y confirmar que carga (mock permitido en esta fase) | Laura | UI visible en navegador (`http://localhost:8501`) |
 | 6 | Verificar que el back lee `data/processed/*` (rates/fees/corridors) | José, Juan | Datos accesibles |
 
 **Salida del bloque:** entorno arriba. Si algo falla aquí, resolverlo ya (no arrastrar).
@@ -52,7 +52,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|
 | C1 | Formulario: `amount_eur`, destino (Kenia/KES), `fee_eur`, `scenario_drop_pct` + validación básica | Inputs controlados y validados |
 | C2 | Vista de resultados: 2 escenarios, diferencia, supuestos/fuente/fecha/`is_mock`, `tools_used`, texto `reply` | Render claro (no JSON crudo) |
-| C3 | Estados de carga y error; servicio que llama a `POST /api/chat` (`VITE_API_BASE_URL`) | Lista para apuntar al back real |
+| C3 | Estados de carga y error; llamada a `POST /api/chat` usando `API_BASE_URL` | Lista para apuntar al back real |
 
 **Coordinación (José):** vigilar contratos, resolver dudas de datos y preparar integración.
 
