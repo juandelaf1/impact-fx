@@ -59,7 +59,7 @@
 
 ### `calculate_transfer_scenarios`
 - **Propósito:** calcular importe neto recibido por escenario y diferencia.
-- **Input:** `{ "amount_eur": 10000, "rate": 145.0, "fee_eur": 40, "variations": [-3] }`
+- **Input:** `{ "amount_eur": 10000, "rate": 145.0, "fee_eur": 40, "currency": "KES", "variations": [-3] }`
 - **Output:** `{ "net_amount_eur": 9960, "scenarios": [{ "name":"base","rate":145.0,"fee_eur":40,"amount_received":1444200,"currency":"KES" }, { "name":"stress_-3%","rate":140.65,"fee_eur":40,"amount_received":1400874,"currency":"KES" }], "difference": { "amount": 43326, "currency": "KES" } }`
 
 ### `assess_budget_impact` (Should, opcional)

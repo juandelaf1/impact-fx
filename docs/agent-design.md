@@ -35,7 +35,7 @@ FORMATO DE RESPUESTA (INTEGRADA, NO CRUDA)
 | Tool | Descripción | Parámetros (input) | Output | Fuente |
 |---|---|---|---|---|
 | `get_fx_reference` | Obtiene la tasa de referencia para un par de divisas (fixtures). | `base` (string, ISO 4217, req), `quote` (string, ISO 4217, req), `date` (string ISO 8601, opc) | `{ rate: number, source: string, date: string, is_mock: boolean }` | `data/processed/fx_rates.json` |
-| `calculate_transfer_scenarios` | Calcula importes recibidos por escenario y diferencia. | `amount_eur` (number>0, req), `rate` (number>0, req), `fee_eur` (number>=0, req), `variations` (number[], req, ej. [-3]) | `{ net_amount_eur, scenarios:[{name,rate,fee_eur,amount_received,currency}], difference:{amount,currency} }` | Cálculo + `fee_rules.json` |
+| `calculate_transfer_scenarios` | Calcula importes recibidos por escenario y diferencia. | `amount_eur` (number>0, req), `rate` (number>0, req), `fee_eur` (number>=0, req), `currency` (string, ISO 4217, req), `variations` (number[], req, ej. [-3]) | `{ net_amount_eur, scenarios:[{name,rate,fee_eur,amount_received,currency}], difference:{amount,currency} }` | Cálculo + `fee_rules.json` |
 | `assess_budget_impact` *(Should, opcional)* | Mapea la diferencia a partidas del proyecto y genera alertas. | `base_amount_received` (number), `stressed_amount_received` (number), `currency` (string), `project_budget` (array) | `{ affected_items:[...], alerts:[...] }` | `data/processed/project_budgets.json` |
 
 ### Definiciones JSON Schema (referencia para el LLM)
@@ -63,9 +63,10 @@ FORMATO DE RESPUESTA (INTEGRADA, NO CRUDA)
         "amount_eur": { "type": "number", "description": "Monto a enviar en EUR" },
         "rate": { "type": "number", "description": "Tasa de referencia (unidades de moneda destino por 1 EUR)" },
         "fee_eur": { "type": "number", "description": "Comisión en EUR" },
+        "currency": { "type": "string", "description": "Moneda destino ISO 4217, ej. KES" },
         "variations": { "type": "array", "items": { "type": "number" }, "description": "Variaciones porcentuales, ej. [-3]" }
       },
-      "required": ["amount_eur", "rate", "fee_eur", "variations"]
+      "required": ["amount_eur", "rate", "fee_eur", "currency", "variations"]
     }
   }
 ]
