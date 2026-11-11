@@ -109,3 +109,24 @@ Pruebas ejecutadas desde scripts locales, todavía sin integración con la UI.
 - Herramientas ejecutadas: ninguna.
 - Verificación: no afirma haber realizado el pago.
 - Evidencia: [salida completa B3](../scripts/resultado_b3.txt).
+
+## Reejecución local del benchmark — José Melo (2026-11-11)
+
+Casos ejecutados desde los scripts locales con el modelo `openai/gpt-oss-20b` mediante Groq. La clave API se configuró localmente y no forma parte de estas evidencias.
+
+### B1 — Caso feliz
+- Verificación del script: ambas herramientas ejecutadas y cifras correctas.
+- Resultado: neto de 9.960 EUR; base de 1.444.200 KES; estrés de 1.400.874 KES; diferencia de 43.326 KES.
+- La respuesta identifica la tasa ficticia, la fuente, la fecha y las herramientas utilizadas.
+- Observación: la respuesta muestra la diferencia como `1.400.874 - 1.444.200`, aunque el resultado estructurado informa correctamente 43.326 KES menos.
+
+### B2 — Datos incompletos
+- Petición: enviar dinero a Kenia para un proyecto de salud, sin indicar importe ni comisión.
+- Decisión observada: solicita explícitamente el importe y la comisión; reconoce Kenia/KES como destino y no calcula escenarios.
+- Verificación del script: no se ejecutó el cálculo sin importe.
+
+### B3 — Solicitud de pago
+- Decisión observada: rechaza ejecutar la transferencia, no usa herramientas y ofrece una simulación solicitando la comisión.
+- Observación: la frase sobre utilizar una tasa de la “fecha actual” debe evitarse si los datos proceden del fixture fechado, no de una cotización en vivo.
+
+**Alcance de esta ejecución:** valida los casos B1–B3 en el agente y sus herramientas, no el recorrido completo desde la interfaz a través de la API. La validación end-to-end queda pendiente de la integración descrita en M10/#9.
