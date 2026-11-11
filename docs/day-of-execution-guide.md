@@ -24,7 +24,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 | 2 | Instalar dependencias back y front | Juan, Laura | Sin errores de instalación |
 | 3 | Configurar `.env` local (copiar de `.env.example`) y verificar clave LLM | Juan, Gema | Variable cargada, no en git |
 | 4 | Arrancar backend y comprobar `GET /api/health` | Juan | Responde `{ "status":"ok" }` |
-| 5 | Arrancar frontend y confirmar que carga (mock permitido en esta fase) | Laura | UI visible en navegador |
+| 5 | Arrancar frontend (Streamlit) y confirmar que carga (mock permitido en esta fase) | Laura | UI visible en navegador (`http://localhost:8501`) |
 | 6 | Verificar que el back lee `data/processed/*` (rates/fees/corridors) | José, Juan | Datos accesibles |
 
 **Salida del bloque:** entorno arriba. Si algo falla aquí, resolverlo ya (no arrastrar).
@@ -37,7 +37,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|
 | A1 | Implementar `get_fx_reference(base, quote, date?)` leyendo `data/processed/fx_rates.json` | Devuelve `{rate,source,date,is_mock}` para EUR→KES |
 | A2 | Implementar `calculate_transfer_scenarios(amount_eur, rate, fee_eur, variations[])` | Cálculo exacto: neto 9960, base 1.444.200, −3% 1.400.874, Δ 43.326 |
-| A3 | Definir/ajustar **system prompt** (rol, ámbito ODS 10,17 + sensibilidad a impacto desigual/brecha según contexto, límites, criterios de decisión, obligación de declarar supuestos/fuente) | Prompt en `docs/agent-design.md` y cargado por el backend |
+| A3 | Definir/ajustar **system prompt** (rol, ámbito ODS 9, 10, 17 + sensibilidad a impacto desigual/brecha según contexto, límites, criterios de decisión, obligación de declarar supuestos/fuente) | Prompt en `docs/agent-design.md` y cargado por el backend |
 | A4 | Configurar definiciones de tools (JSON schema de parámetros) para *function calling* | LLM recibe las 2 tools con firmas correctas |
 
 **Pista B — Backend & API (Juan, apoyo Gema)**
@@ -52,7 +52,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|
 | C1 | Formulario: `amount_eur`, destino (Kenia/KES), `fee_eur`, `scenario_drop_pct` + validación básica | Inputs controlados y validados |
 | C2 | Vista de resultados: 2 escenarios, diferencia, supuestos/fuente/fecha/`is_mock`, `tools_used`, texto `reply` | Render claro (no JSON crudo) |
-| C3 | Estados de carga y error; servicio que llama a `POST /api/chat` (`VITE_API_BASE_URL`) | Lista para apuntar al back real |
+| C3 | Estados de carga y error; llamada a `POST /api/chat` usando `API_BASE_URL` | Lista para apuntar al back real |
 
 **Coordinación (José):** vigilar contratos, resolver dudas de datos y preparar integración.
 
@@ -84,7 +84,7 @@ Objetivo: terminar el día con un MVP **viable y completo** que cumpla los requi
 |---:|---|---|---|
 | 1 | Desplegar backend y frontend, configurar env/CORS en hosting, smoke test en URL | José, Juan | URL operativa (o activar plan B si falla en ≤20–30 min) |
 | 2 | Completar `README.md` (instalación, `.env`, ejecución, uso, URL) | José | Reproducible |
-| 3 | Cerrar `docs/ods-justification.md` (ODS 10,17 y aporte) | José | Justificación clara |
+| 3 | Cerrar `docs/ods-justification.md` (ODS 9, 10, 17 y aporte) | José | Justificación clara |
 | 4 | Cerrar doc técnica: stack, endpoints, prompts, **system prompt**, descripción de cada tool (parámetros) | Gema, José | Requisito 5.1/entregable cubierto |
 | 5 | Completar `docs/interactions.md` con ≥3 interacciones reales y razonamiento | José, Gema | Entregable cubierto |
 | 6 | Commits finales descriptivos y push a `main` | Todos | Repo actualizado |

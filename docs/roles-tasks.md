@@ -46,7 +46,7 @@
 
 ### Preparación (antes del jueves)
 - **Juan Manuel:** boilerplate backend (`/health`, carga datos, cliente LLM por `.env`, esqueleto `/api/chat`), CORS/validación base, probar smoke test *function calling*, preparar despliegue back.
-- **Laura:** boilerplate frontend (formulario + vista escenarios/diferencia/supuestos con mock), estados carga/error, servicio API, preparar despliegue front.
+- **Laura:** boilerplate frontend en Streamlit (`app.py`, formulario + vista escenarios/diferencia/supuestos con mock), estados carga/error, llamada a la API (`API_BASE_URL`), preparar despliegue front.
 - **Gema:** system prompt (borrador final), firmas JSON de tools, criterios de decisión, plantilla de 3 interacciones, revisión de contrato de tools.
 - **José Melo:** repo/estructura, `data/processed` + `demo_scenarios` validados, `data/README` y esquemas, contratos compartidos, docs base (arquitectura, benchmark, ODS, demo, tech-debt, roadmap/backlog/decision-log), preparar deploy.
 - **Todos:** confirmar roles, cerrar D-003/D-004/D-009, revisar checklist go/no-go.

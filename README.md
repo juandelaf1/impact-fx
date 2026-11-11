@@ -2,9 +2,10 @@
 
 Agente de IA que ayuda a ONG a estimar cuánto dinero recibe realmente su socio local en una transferencia internacional, comparando escenarios de tipo de cambio y comisiones e integrando el resultado en una respuesta clara.
 
-- **ODS:** 10 (Reducción de las desigualdades) y 17 (Alianzas para lograr los objetivos).
+- **ODS:** 9 (Industria, innovación e infraestructura), 10 (Reducción de las desigualdades) y 17 (Alianzas para lograr los objetivos).
 - **Caso demo (MVP):** 10.000 EUR → Kenia (KES), comisión 40 EUR, tasa ref. 145 KES/EUR (ficticia, identificada), variación −3%.
   - Base: **1.444.200 KES** · Estrés (−3%): **1.400.874 KES** · Diferencia: **43.326 KES**.
+- **Stack:** Frontend **Streamlit (Python)**; Backend por confirmar (D-003).
 
 > **Alcance:** MVP simple y robusto (1 corredor, 2 escenarios, 2 tools). Agnóstico por diseño (datos por corredor), acotado en demo. No ejecuta pagos ni ofrece asesoría vinculante.
 
@@ -23,7 +24,7 @@ impact-fx/
 ```
 
 ## Requisitos previos
-- Node.js >= 18 (recomendado) y/o Python >= 3.10 según stack elegido.
+- Python >= 3.10 (frontend Streamlit) y/o Node.js >= 18 según stack del backend elegido.
 - Git.
 - Una API key de un proveedor LLM con soporte de *function/tool calling* (p.ej. Groq, OpenAI, Gemini).
 
@@ -33,7 +34,7 @@ impact-fx/
    ```bash
    cp .env.example .env
    ```
-3. Variables clave: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (si aplica), `PORT`, `VITE_API_BASE_URL`.
+3. Variables clave: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (si aplica), `PORT`, `API_BASE_URL` (URL del backend para el frontend).
 
 ## Ejecución local
 > Ajustar comandos al stack definitivo elegido por el equipo.
@@ -42,17 +43,17 @@ impact-fx/
 ```bash
 cd backend
 # instalar dependencias (npm install | pip install -r requirements.txt)
-# ejecutar en desarrollo (npm run dev | uvicorn src.index:app --reload --port 3001)
+# ejecutar en desarrollo (npm run dev | uvicorn src.main:app --reload --port 3001)
 ```
 - Health check: `GET http://localhost:3001/api/health`
 
-### Frontend
+### Frontend (Streamlit)
 ```bash
 cd frontend
-# instalar dependencias (npm install)
-# ejecutar en desarrollo (npm run dev)
+# crear entorno e instalar dependencias (pip install -r requirements.txt)
+# ejecutar: streamlit run app.py
 ```
-- App: `http://localhost:5173` (consume `VITE_API_BASE_URL`).
+- App: `http://localhost:8501` (consume `API_BASE_URL`, por defecto `http://localhost:3001`).
 
 ## API (resumen)
 - `GET /api/health` → `{ "status": "ok" }`
@@ -61,7 +62,7 @@ cd frontend
 Detalle completo en [`docs/api-contract.md`](docs/api-contract.md).
 
 ## Agente y herramientas
-- **System prompt:** rol, ámbito (ODS 10,17; sensibilidad al impacto desigual), límites y criterios de decisión. Ver [`docs/agent-design.md`](docs/agent-design.md).
+- **System prompt:** rol, ámbito (ODS 9, 10, 17; sensibilidad al impacto desigual), límites y criterios de decisión. Ver [`docs/agent-design.md`](docs/agent-design.md).
 - **Tools (function calling):**
   - `get_fx_reference(base, quote, date?)` → tasa de referencia desde fixtures (`rate, source, date, is_mock`).
   - `calculate_transfer_scenarios(amount_eur, rate, fee_eur, variations[])` → escenarios, importes recibidos y diferencia.
