@@ -1,0 +1,70 @@
+[
+  {
+    "name": "get_fx_reference",
+    "description": "Obtiene una tasa de cambio desde los datos locales disponibles.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "string",
+          "description": "Moneda origen, por ejemplo EUR"
+        },
+        "quote": {
+          "type": "string",
+          "description": "Moneda destino, por ejemplo KES"
+        },
+        "date": {
+          "type": "string",
+          "description": "Fecha opcional en formato YYYY-MM-DD"
+        }
+      },
+      "required": ["base", "quote"]
+    }
+  },
+  {
+    "name": "calculate_transfer_scenarios",
+    "description": "Calcula el importe recibido en el escenario base y con una variación de tasa, y su diferencia.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "amount_eur": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Monto a enviar en EUR"
+        },
+        "rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Unidades de moneda destino por cada EUR"
+        },
+        "fee_eur": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Comisión en EUR; no puede superar el monto enviado"
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -100
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "description": "Una variación porcentual; por ejemplo [-3] para una caída del 3 %"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "La misma moneda destino utilizada como quote al consultar la tasa"
+        }
+      },
+      "required": [
+        "amount_eur",
+        "rate",
+        "fee_eur",
+        "variations",
+        "currency"
+      ]
+    }
+  }
+]

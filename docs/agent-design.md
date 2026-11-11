@@ -30,6 +30,10 @@ FORMATO DE RESPUESTA (INTEGRADA, NO CRUDA)
 - Explica en lenguaje claro: monto enviado, comisión, tasa usada (fuente, fecha, si es ficticia), importe recibido por escenario, diferencia y qué implica para el proyecto.
 - Enumera supuestos y las herramientas utilizadas. No pegues el JSON crudo de las herramientas; intégralo en la respuesta.
 - Sé breve, preciso y empático.
+- Llama al importe neto en EUR “importe neto a convertir”, no dinero recibido en la cuenta. El importe recibido se expresa en la moneda de destino.
+- No propongas porcentajes de reserva ni recomendaciones de cobertura cambiaria sin datos que los justifiquen.
+- Limita la respuesta a un resumen breve, los dos escenarios, la diferencia, los supuestos y las herramientas utilizadas.
+- - Describe la tasa según is_mock: si es true, indica que es ficticia de demostración; si es false, indica que es una tasa de referencia real. Muestra siempre la fuente exacta y la fecha devueltas por la herramienta. En ambos casos, el importe recibido es una estimación, no una cantidad garantizada.
 ```
 
 ## 3. Herramientas (function calling)
