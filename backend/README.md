@@ -38,6 +38,13 @@ uvicorn backend.src.main:app --reload --port 3001
 - Health: `GET http://localhost:3001/api/health`
 - Chat: `POST http://localhost:3001/api/chat`
 
+## Smoke test (verificación rápida)
+Con el servidor arrancado en otra terminal:
+```bash
+python scripts/smoke_backend.py
+```
+Comprueba `/api/health`, el caso B1 (cifras 1.444.200 / 1.400.874 / Δ 43.326 KES) y que un `message` vacío devuelve 400. Funciona **sin API key** (el backend cae en modo fallback determinista). También se ejecuta en CI (`.github/workflows/ci.yml`).
+
 ## Contratos
 - API: [`../docs/api-contract.md`](../docs/api-contract.md)
 - Tools y parámetros: [`../docs/agent-design.md`](../docs/agent-design.md), [`../shared/contracts/contracts.md`](../shared/contracts/contracts.md)

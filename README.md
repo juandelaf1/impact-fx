@@ -61,6 +61,15 @@ cd frontend
 
 Detalle completo en [`docs/api-contract.md`](docs/api-contract.md).
 
+### Verificación rápida
+```bash
+# 1. Arrancar la API
+uvicorn backend.src.main:app --port 3001
+# 2. En otra terminal
+python scripts/smoke_backend.py
+```
+Comprueba health, el caso B1 (1.444.200 / 1.400.874 / Δ 43.326 KES) y el 400 con entrada inválida. Funciona sin API key (modo fallback determinista).
+
 ## Agente y herramientas
 - **System prompt:** rol, ámbito (ODS 9, 10, 17; sensibilidad al impacto desigual), límites y criterios de decisión. Ver [`docs/agent-design.md`](docs/agent-design.md).
 - **Tools (function calling):**
