@@ -24,7 +24,7 @@
 }
 ```
 - `message` (string, req)
-- `context` (object, req): `amount_eur` (number>0), `destination_country` (string), `currency` (string), `fee_eur` (number>=0, opc), `scenario_drop_pct` (number, opc, default 3), `project_budget` (array, opc)
+- `context` (object, req): `amount_eur` (number>0), `destination_country` (string), `currency` (string), `fee_eur` (number>=0, opc), `scenario_drop_pct` (number, opc, default 3), `project_budget` (array, opc, aceptado pero no aplicado al cálculo de `budget_impact` en MVP)
 - `history` (array, opc)
 
 **Response 200 (JSON, campos principales):**
@@ -64,7 +64,7 @@
 - `calculation_source`: `financial_engine` | `demo_scenarios` | `frontend_preview` (frontend).
 - `fx_reference`: `{rate, source, date, is_mock}` | `null` (metadatos de tasa verificada; no implica escenarios verificados).
 - `is_fallback`: `true` solo en fallback determinista; `false` en flujo del agente (aunque esté degradado).
-- `budget_impact` (opcional): impacto presupuestario determinista demo cuando aplica.
+- `budget_impact` (opcional): impacto presupuestario determinista demo cuando aplica (MVP: presupuesto demo fijo KE-HEALTH-001; `context.project_budget` aceptado pero no aplicado al cálculo).
 - `tools_used`: solo tools ejecutadas correctamente; fallback determinista ⇒ `[]`.
 
 **Notas de comportamiento:**

@@ -42,7 +42,7 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 | `context.currency` | string (ISO 4217) | sí | Moneda destino MVP: `KES` |
 | `context.fee_eur` | number (>=0) | no | Comisión en EUR (si falta, puede aplicar regla/supuesto definido) |
 | `context.scenario_drop_pct` | number | no | Variación % escenario estrés (default 3) |
-| `context.project_budget` | array | no | Partidas `[ {name, amount_local, priority?} ]` |
+| `context.project_budget` | array | no | Partidas `[ {name, amount_local, priority?} ]`. Aceptado por contrato, pero **no aplicado** al cálculo de `budget_impact` en el MVP (se usa presupuesto demo fijo KE-HEALTH-001 cuando aplica). |
 | `history` | array | no | Historial de mensajes (opcional MVP) |
 
 #### Response 200
@@ -105,7 +105,7 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 | `agent.calculation_source` | string | Origen del cálculo: `financial_engine` (tools/cálculo determinista verificado), `demo_scenarios` (fixture/golden fallback), `frontend_preview` (solo frontend local, no backend) |
 | `agent.fx_reference` | object \| null | Metadatos estructurados de la tasa cuando existen y son válidos: `{ rate, source, date, is_mock }`. `null` si no hay tasa verificada disponible (p. ej. fallback determinista). No se inventan metadatos. Su existencia **no** implica que existan escenarios financieros verificados. |
 | `agent.is_fallback` | boolean | `true` solo si la respuesta procede del fallback determinista (`_fallback_response`); `false` en respuestas del flujo del agente (incluidas degradadas no redirigidas a fallback). |
-| `agent.budget_impact` | object | (Opcional) Impacto presupuestario determinista demo cuando aplica (p. ej. KE-HEALTH-001). Puede incluirse en respuestas verificadas y en fallbacks deterministas con escenarios disponibles. No asigna déficit a partidas concretas y se marca como sintético/demo. |
+| `agent.budget_impact` | object | (Opcional) Impacto presupuestario determinista demo cuando aplica (p. ej. KE-HEALTH-001). Puede incluirse en respuestas verificadas y en fallbacks deterministas con escenarios disponibles. No asigna déficit a partidas concretas y se marca como sintético/demo. **MVP:** se usa presupuesto demo fijo (KE-HEALTH-001); `context.project_budget` se acepta en la API pero **no** se aplica al cálculo de `budget_impact`. |
 
 **Reglas de integración (congeladas):**
 - `tools_used` contiene **solo** tools ejecutadas correctamente.
