@@ -151,3 +151,6 @@ Casos ejecutados desde los scripts locales con el modelo `openai/gpt-oss-20b` me
 - Verificación: respuesta integrada y cifras exactas; el resumen de razonamiento no indica fallback y el panel estructurado identifica ambas herramientas.
 
 **Alcance de esta ejecución:** valida B1 desde la UI con el agente activo y las dos herramientas indicadas por el backend. La tasa sigue siendo ficticia y la prueba no ejecuta pagos ni consulta tasas reales.
+## Notas de ejecución
+- Evidencias I1–I4: verificaciones reales sobre API/orquestador y API local en `main` (post PR #34, 2026-11-12) con `FX_SOURCE=demo` (incluye `scripts/smoke_backend.py` OK y comprobaciones B1–B3).
+- Para cierre final de demo: complementar con capturas de UI Streamlit y, si aplica, ejecución en Docker/entorno desplegado con configuración final.

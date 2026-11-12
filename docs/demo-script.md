@@ -29,6 +29,9 @@
 ### 4) Técnico y retos (1:30)
 - Stack elegido, endpoint `/api/chat`, datos en `data/processed` (agnóstico por diseño, demo acotada), validación y `.env` para claves.
 - Reto típico: integrar tool calling y asegurar respuesta integrada; mitigación: contratos/datos congelados y golden case.
+- Stack: Streamlit + FastAPI + tools deterministas + LLM (tool-calling) y fallback determinista.
+- Retos resueltos: coherencia contrato/metadatos, validación de procedencia FX y cálculos, manejo B2/B3/errores, y resiliencia sin fingir tools/LLM.
+- Calidad: 39 tests unitarios/integración de lógica, validación de golden cases, smoke API y CI (validate/tests/smoke).
 
 ### 5) Cierre (1:00)
 - Aprendizajes: priorizar ciclo completo y determinismo; trabajo por roles y contratos.
