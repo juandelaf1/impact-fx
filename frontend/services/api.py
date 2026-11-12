@@ -18,6 +18,25 @@ API_TIMEOUT = 30
 class APIError(Exception):
     """Error controlado al comunicarse con el backend."""
 
+    def __init__(self, message: str, status_code: int | None = None, error_data: dict | None = None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.error_data = error_data or {}
+
+
+def _friendly_error(status_code: int, error_data: dict) -> str:
+    details = ""
+    if isinstance(error_data, dict):
+        details = str(error_data.get("details") or error_data.get("detail") or "").strip()
+    if status_code == 400:
+        return details or "Entrada inválida. Revisa los datos e inténtalo de nuevo."
+    if status_code == 422:
+        # B2: dato faltante / request no procesable -> solicitar dato faltante sin inventar cifras
+        return details or "Faltan datos para completar la simulación. Indica el dato faltante."
+    if status_code == 502:
+        return details or "El servicio no está disponible temporalmente. Inténtalo de nuevo."
+    return details or f"Error del backend ({status_code})."
+
 
 def send_chat_message(message: str, context: dict, history: list | None = None) -> dict:
     """
@@ -45,40 +64,38 @@ def send_chat_message(message: str, context: dict, history: list | None = None) 
                 error_data = response.json()
             except ValueError:
                 error_data = {"detail": response.text}
-
             raise APIError(
-                f"Error del backend ({response.status_code}): "
-                f"{error_data}"
+                _friendly_error(response.status_code, error_data if isinstance(error_data, dict) else {}),
+                status_code=response.status_code,
+                error_data=error_data if isinstance(error_data, dict) else {"detail": str(error_data)},
             )
 
         try:
             data = response.json()
         except ValueError as exc:
-            raise APIError("El backend ha devuelto una respuesta no válida.") from exc
+            raise APIError("El backend ha devuelto una respuesta no válida.", status_code=response.status_code) from exc
 
         if not isinstance(data, dict):
-            raise APIError("El formato de respuesta del backend no es válido.")
+            raise APIError("El formato de respuesta del backend no es válido.", status_code=response.status_code)
 
         if "reply" not in data:
-            raise APIError("La respuesta del backend no contiene el campo 'reply'.")
+            raise APIError("La respuesta del backend no contiene el campo 'reply'.", status_code=response.status_code)
 
         return data
 
     except requests.exceptions.Timeout as exc:
-        raise APIError(
-            "El backend ha tardado demasiado en responder."
-        ) from exc
+        raise APIError("El backend ha tardado demasiado en responder (timeout).", error_data={"code": "TIMEOUT"}) from exc
 
     except requests.exceptions.ConnectionError as exc:
         raise APIError(
-            "No se ha podido conectar con el backend. "
-            "Comprueba que el servidor está funcionando."
+            "No se ha podido conectar con el backend. Comprueba que el servidor está funcionando.",
+            error_data={"code": "CONNECTION_ERROR"},
         ) from exc
 
+    except APIError:
+        raise
     except requests.exceptions.RequestException as exc:
-        raise APIError(
-            f"Error durante la comunicación con el backend: {exc}"
-        ) from exc
+        raise APIError(f"Error durante la comunicación con el backend.", error_data={"details": "request_error"}) from exc
 
 
 def check_api_health() -> bool:
