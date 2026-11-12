@@ -47,8 +47,12 @@
 
 **Errores:**
 - `400` `{ "error": "invalid_input", "code": "BAD_REQUEST", "details": "..." }`
-- `422` `{ "error": "missing_data", "code": "UNPROCESSABLE", "details": "..." }` (falta dato clave; el agente puede pedirlo en `reply`)
+- `422` `{ "error": "missing_data", "code": "UNPROCESSABLE", "details": "..." }` (faltan datos mínimos de simulación sin valor/regla inferible, o request de chat no procesable; el detalle se entrega en `details`)
 - `502` `{ "error": "upstream_failure", "code": "LLM_OR_TOOL_ERROR", "details": "..." }`
+
+**Notas de comportamiento (implementación actual):**
+- Si falta `fee_eur` y existe regla para la moneda en `data/processed/fee_rules.json`, el backend puede aplicar la comisión por defecto.
+- Ante fallo/indisponibilidad del LLM o agotamiento de rondas, el orquestador puede devolver respuesta 200 en **fallback determinista** desde `demo_scenarios.json` (si hay coincidencia), incluyendo motivo/alertas en `agent`.
 
 ## Tools (function calling)
 
