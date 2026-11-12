@@ -25,6 +25,36 @@ jobs:
       - name: Validate processed data
         run: node scripts/validate-data.mjs
 
+  backend-smoke:
+    name: Backend smoke test (health + chat B1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Start API
+        run: |
+          nohup uvicorn backend.src.main:app --port 3001 > /tmp/uvicorn.log 2>&1 &
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3001/api/health && break
+            sleep 1
+          done
+
+      - name: Run smoke test
+        run: python scripts/smoke_backend.py
+
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/uvicorn.log
+
   # Extender cuando se cierre el stack (D-003):
-  # - lint/test/build backend
   # - lint/test/build frontend
+  # - tests unitarios (pytest/unittest)

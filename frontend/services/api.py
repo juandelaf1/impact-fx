@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 # Cargar variables de entorno
 load_dotenv()
 
-API_BASE_URL = os.getenv(
-    "VITE_API_BASE_URL",
-    "http://localhost:3001"
+API_BASE_URL = (
+    os.getenv("API_BASE_URL")
+    or os.getenv("VITE_API_BASE_URL")
+    or "http://localhost:3001"
 ).rstrip("/")
 
 API_TIMEOUT = 30
