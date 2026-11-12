@@ -78,13 +78,14 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 #### Errores
 | HTTP | `code` | `error` | Cuándo |
 |---:|---|---|---|
-| 400 | `BAD_REQUEST` | `invalid_input` | Tipos/rangos inválidos, JSON mal formado |
-| 422 | `UNPROCESSABLE` | `missing_data` | Falta dato clave no inferible; `reply` debe pedirlo o declarar supuesto |
-| 502 | `LLM_OR_TOOL_ERROR` | `upstream_failure` | Fallo del LLM o de una tool |
+| 400 | `BAD_REQUEST` | `invalid_input` | Entrada inválida según validación del endpoint (p. ej. `message` vacío) |
+| 422 | `UNPROCESSABLE` | `missing_data` | Faltan datos mínimos de simulación sin valor/regla inferible (p. ej. `currency`, `amount_eur`, `fee_eur` sin regla en `fee_rules.json`) o la request de chat no es procesable; el backend devuelve el detalle en `details` |
+| 502 | `LLM_OR_TOOL_ERROR` | `upstream_failure` | Fallo no controlado del LLM/orquestación/tools en el endpoint |
 
 Formato: `{ "error": "string", "code": "STRING", "details": "string" }`
 
 ## Notas de integración
-- Frontend debe mostrar `reply` y, de forma estructurada, escenarios/diferencia/supuestos/`tools_used` (no el JSON crudo de las tools).
-- En caso de 422, mostrar `reply/details` pidiendo el dato faltante.
-- **Plan B:** si 502 persistente, permitir modo determinista con `demo_scenarios.json` (manteniendo el flujo visible).
+- Frontend debe mostrar `reply` y, de forma estructurada, escenarios/diferencia/supuestos/`tools_used`/`alerts` (no el JSON crudo de las tools).
+- Si falta `fee_eur` y existe regla para la moneda en `data/processed/fee_rules.json`, el backend puede aplicar la comisión por defecto antes de simular.
+- En caso de 422, mostrar `details` (y `reply` si estuviera disponible) para solicitar/corregir el dato faltante.
+- **Plan B / resiliencia:** si el LLM falla, no está disponible o se agotan rondas de tool-calling, el orquestador puede responder en **fallback determinista** desde `demo_scenarios.json` (cuando hay coincidencia), incluyendo motivo y alertas de trazabilidad en `agent`.
