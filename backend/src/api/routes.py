@@ -44,7 +44,7 @@ class ChatContext(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=MAX_MESSAGE_LEN)
+    message: str = Field(..., max_length=MAX_MESSAGE_LEN)
     context: ChatContext
     history: Optional[list[dict[str, Any]]] = None
 
