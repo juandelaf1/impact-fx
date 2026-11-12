@@ -255,11 +255,22 @@ def render_results(data: dict, demo_mode: bool = False):
 
     # Herramientas utilizadas (solo ejecuciones reales)
     tools_used = agent.get("tools_used", [])
+    fx_reference = agent.get("fx_reference")
+    is_fallback = agent.get("is_fallback")
     with st.expander("Execution details"):
         st.write(f"Execution mode: {execution_mode or 'n/a'}")
         st.write(f"Degraded: {str(degraded).lower()}")
+        st.write(f"Is fallback: {str(bool(is_fallback)).lower() if is_fallback is not None else 'n/a'}")
         st.write(f"FX source: {fx_source or 'n/a'}")
         st.write(f"Calculation source: {calculation_source or 'n/a'}")
+        if isinstance(fx_reference, dict):
+            st.write(
+                "FX reference: "
+                f"rate={fx_reference.get('rate')}, source={fx_reference.get('source')}, "
+                f"date={fx_reference.get('date')}, is_mock={str(fx_reference.get('is_mock')).lower()}"
+            )
+        else:
+            st.write("FX reference: none")
         if tools_used:
             st.write("Tools executed successfully:")
             for tool in tools_used:

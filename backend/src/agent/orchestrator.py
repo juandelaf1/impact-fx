@@ -244,6 +244,11 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
         if budget_impact:
             agent["budget_impact"] = budget_impact
             agent["assumptions"].append("Impacto presupuestario calculado con presupuesto sintético/de demostración (KE-HEALTH-001).")
+        if context.get("project_budget"):
+            agent.setdefault("assumptions", [])
+            agent["assumptions"].append(
+                "context.project_budget recibido pero no aplicado al cálculo de budget_impact en MVP; se usa presupuesto demo fijo KE-HEALTH-001 cuando aplica."
+            )
         return {"reply": reply, "agent": agent}
 
     return {
@@ -358,6 +363,11 @@ def run_agent(
                     if budget_impact:
                         meta["budget_impact"] = budget_impact
                         meta["assumptions"].append("Impacto presupuestario calculado con presupuesto sintético/de demostración (KE-HEALTH-001). No se asigna el déficit a partidas concretas.")
+                    if context.get("project_budget"):
+                        meta.setdefault("assumptions", [])
+                        meta["assumptions"].append(
+                            "context.project_budget recibido pero no aplicado al cálculo de budget_impact en MVP; se usa presupuesto demo fijo KE-HEALTH-001 cuando aplica."
+                        )
                     return {"reply": reply, "agent": meta}
 
                 # Sin simulación determinista verificada: no exponer escenarios no respaldados
