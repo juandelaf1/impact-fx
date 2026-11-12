@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.src.api.routes import router as api_router
 from backend.src.config.settings import settings
@@ -19,6 +21,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    details = "; ".join(
+        f"{'.'.join(str(loc) for loc in e.get('loc', []) if loc != 'body')}: {e.get('msg', 'invalid')}"
+        for e in errors
+    ) or "Solicitud inválida"
+    # Si es el endpoint de chat, alineamos formato 422 del contrato cuando faltan/son inválidos datos
+    if request.url.path.endswith("/api/chat"):
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "missing_data",
+                "code": "UNPROCESSABLE",
+                "details": details,
+            },
+        )
+    return JSONResponse(status_code=422, content={"detail": errors})
+
 
 app.include_router(api_router)
 
