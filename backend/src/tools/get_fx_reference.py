@@ -1,5 +1,12 @@
 import json
+import math
+import os
+import re
+import warnings
+from datetime import date as calendar_date
+from http.client import HTTPException
 from pathlib import Path
+from urllib.request import urlopen
 
 # Localizamos la raíz del proyecto desde este archivo:
 # parents[0] → tools
@@ -12,13 +19,55 @@ from pathlib import Path
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "processed"
 
 
+def fetch_frankfurter_rate(base: str, quote: str) -> dict:
+    """
+    Consulta el último tipo de cambio de referencia disponible
+    en Frankfurter.
+    """
+    url = f"https://api.frankfurter.dev/v2/rate/{base}/{quote}"
+
+    try:
+        with urlopen(url, timeout=8) as response:
+            data = json.load(response)
+    except (OSError, HTTPException) as error:
+        raise ConnectionError(
+            "No se pudo consultar Frankfurter."
+        ) from error
+
+    try:
+        if not isinstance(data, dict):
+            raise ValueError("La respuesta debe ser un objeto JSON.")
+        raw_rate = data["rate"]
+        if isinstance(raw_rate, bool):
+            raise ValueError("La tasa no puede ser un booleano.")
+        rate = float(raw_rate)
+        if not math.isfinite(rate) or rate <= 0:
+            raise ValueError("La tasa debe ser positiva y finita.")
+        rate_date = data["date"]
+        if not isinstance(rate_date, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", rate_date):
+            raise ValueError("La fecha debe tener formato YYYY-MM-DD.")
+        calendar_date.fromisoformat(rate_date)
+        if data.get("base") != base or data.get("quote") != quote:
+            raise ValueError("El par de monedas no coincide con la consulta.")
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise ValueError("Frankfurter devolvió una referencia no válida.") from error
+
+    return {
+        "rate": rate,
+        "source": "frankfurter",
+        "date": rate_date,
+        "is_mock": False,
+    }
+
+
 def get_fx_reference(
     base: str,
     quote: str,
     date: str | None = None,
 ) -> dict:
     """
-    Busca una tasa de cambio en los datos locales de la demo.
+    Busca una tasa local o de Frankfurter según FX_SOURCE (demo por defecto).
+    Las consultas con fecha concreta siempre utilizan los datos locales.
 
     Parámetros:
         base: moneda de origen, por ejemplo "EUR".
@@ -49,6 +98,34 @@ def get_fx_reference(
     # La fecha puede omitirse, pero si llega debe ser texto.
     if date is not None and not isinstance(date, str):
         raise ValueError("La fecha debe ser una cadena de texto.")
+
+    if not re.fullmatch(r"[A-Z]{3}", base) or not re.fullmatch(r"[A-Z]{3}", quote):
+        raise ValueError("Las monedas deben tener tres letras, por ejemplo EUR.")
+
+    fx_source = os.getenv("FX_SOURCE", "demo").strip().lower()
+    if fx_source not in {"demo", "live"}:
+        raise ValueError("FX_SOURCE debe ser demo o live.")
+
+    # Si estamos en modo live y no se solicita una fecha concreta,
+    # intentamos obtener el tipo de cambio desde Frankfurter.
+    if fx_source == "live" and date is None:
+        try:
+            # Consultamos la API externa.
+            return fetch_frankfurter_rate(base, quote)
+
+        # Si la API falla, capturamos el error.
+        except (ConnectionError, ValueError) as error:
+            # Mostramos una advertencia en la terminal.
+            warnings.warn(
+                f"Frankfurter no disponible: {error}. "
+                "Se intentarán usar datos ficticios de demostración.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+            # Continuamos con el JSON local, que devuelve
+            # is_mock=True para identificar los datos ficticios.
+
 
     # Abrimos el JSON en modo lectura.
     # "with" cierra el archivo automáticamente al terminar.

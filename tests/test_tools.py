@@ -1,6 +1,8 @@
 import json
+import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from backend.src.tools.get_fx_reference import get_fx_reference
 from backend.src.tools.calculate_transfer_scenarios import (
@@ -13,6 +15,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_PATH = PROJECT_ROOT / "data" / "processed" / "demo_scenarios.json"
 
 
+@patch.dict(os.environ, {"FX_SOURCE": "demo"})
 class TestTools(unittest.TestCase):
     """Comprueba las herramientas con los casos de referencia del repo."""
 
