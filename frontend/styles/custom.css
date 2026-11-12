@@ -1,21 +1,37 @@
 
 /* ==========================================
    IMPACT FX — DESIGN SYSTEM
+   Impact Dashboard
    ========================================== */
 
-/* Colores principales:
-   Verde oscuro: #153B30
-   Verde principal: #176B59
-   Verde suave: #DCEFE4
-   Fondo: #F3F6F3
-   Texto: #20352D
-*/
+/* PALETA DE COLORES */
+
+:root {
+    --color-forest: #153B30;
+    --color-green: #176B59;
+    --color-green-dark: #104D40;
+    --color-green-light: #E5F2EA;
+    --color-green-border: #B9D8C5;
+
+    --color-coral: #B85C46;
+    --color-coral-light: #FFF0EB;
+    --color-coral-border: #EAC4B8;
+
+    --color-background: #F3F6F3;
+    --color-surface: #FFFFFF;
+    --color-text: #20352D;
+    --color-muted: #64766B;
+    --color-border: #DCE5DE;
+
+    --shadow-card: 0 4px 16px rgba(21, 59, 48, 0.06);
+    --shadow-hover: 0 7px 22px rgba(21, 59, 48, 0.10);
+}
 
 /* ESTILOS GENERALES */
 
 .stApp {
-    background-color: #F3F6F3;
-    color: #20352D;
+    background-color: var(--color-background);
+    color: var(--color-text);
 }
 
 .block-container {
@@ -24,20 +40,53 @@
     padding-bottom: 3rem;
 }
 
+/* TIPOGRAFÍA */
+
+h1, h2, h3, h4 {
+    color: var(--color-forest);
+    letter-spacing: -0.5px;
+}
+
+h1 {
+    font-weight: 800;
+}
+
+h2 {
+    font-weight: 750;
+    margin-top: 1.8rem;
+}
+
+h3 {
+    font-weight: 700;
+    margin-top: 1.4rem;
+}
+
+p, li {
+    line-height: 1.65;
+}
+
+[data-testid="stCaptionContainer"] {
+    color: var(--color-muted);
+}
+
 /* CABECERA */
 
 .main-header {
-    background: linear-gradient(120deg, #102F28, #176B59);
+    background: linear-gradient(
+        120deg,
+        #102F28 0%,
+        #176B59 100%
+    );
     padding: 2.8rem 3rem;
     border-radius: 22px;
     color: white;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 24px rgba(16, 47, 40, 0.12);
+    margin-bottom: 2.5rem;
+    box-shadow: 0 10px 28px rgba(16, 47, 40, 0.14);
 }
 
 .main-header h1 {
     font-size: 3rem;
-    font-weight: 750;
+    font-weight: 800;
     letter-spacing: -1.5px;
     margin: 0.5rem 0;
     color: white;
@@ -65,11 +114,11 @@
 /* FORMULARIO */
 
 div[data-testid="stForm"] {
-    background-color: #FFFFFF;
+    background-color: var(--color-surface);
     padding: 1.8rem;
-    border: 1px solid #E1E9E3;
+    border: 1px solid var(--color-border);
     border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(21, 59, 48, 0.04);
+    box-shadow: var(--shadow-card);
 }
 
 /* CAMPOS DE ENTRADA */
@@ -80,68 +129,138 @@ div[data-testid="stForm"] {
     border-radius: 10px;
 }
 
-/* ETIQUETAS */
+.stTextInput input:focus,
+.stNumberInput input:focus {
+    border-color: var(--color-green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 89, 0.12);
+}
 
 .stTextInput label,
 .stNumberInput label,
-.stSelectbox label {
-    color: #344C40;
-    font-weight: 600;
+.stSelectbox label,
+.stSlider label {
+    color: var(--color-forest);
+    font-weight: 650;
+}
+
+/* SLIDER */
+
+.stSlider [data-baseweb="slider"] {
+    padding-top: 0.5rem;
+}
+
+.stSlider [role="slider"] {
+    background-color: var(--color-green);
 }
 
 /* BOTONES */
 
 .stButton button,
 div[data-testid="stFormSubmitButton"] button {
-    background-color: #176B59;
+    background-color: var(--color-green);
     color: white;
     border-radius: 10px;
-    border: none;
-    font-weight: 650;
+    border: 1px solid var(--color-green);
+    font-weight: 700;
     min-height: 46px;
     padding: 0.5rem 1.4rem;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .stButton button:hover,
 div[data-testid="stFormSubmitButton"] button:hover {
-    background-color: #104D40;
+    background-color: var(--color-green-dark);
+    border-color: var(--color-green-dark);
     color: white;
-    border: none;
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+}
+
+.stButton button:focus-visible,
+div[data-testid="stFormSubmitButton"] button:focus-visible {
+    outline: 3px solid rgba(23, 107, 89, 0.3);
+    outline-offset: 2px;
 }
 
 /* MÉTRICAS */
 
 div[data-testid="stMetric"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E1E9E3;
-    border-radius: 16px;
-    padding: 1.2rem;
-    box-shadow: 0 3px 12px rgba(21, 59, 48, 0.04);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 15px;
+    padding: 1.15rem;
+    box-shadow: var(--shadow-card);
+    min-height: 100%;
 }
 
 div[data-testid="stMetricLabel"] {
-    color: #64766B;
-    font-weight: 600;
+    color: var(--color-muted);
+    font-weight: 650;
 }
 
 div[data-testid="stMetricValue"] {
-    color: #153B30;
-    font-weight: 750;
+    color: var(--color-forest);
+    font-weight: 800;
+    letter-spacing: -0.7px;
+}
+
+/* CONTENEDORES Y TARJETAS */
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 15px;
+    border-color: var(--color-border);
+}
+
+/* TARJETA PRINCIPAL: RESULTADO ESTIMADO */
+
+.st-key-impact_primary_card {
+    background-color: #E5F2EA !important;
+    border: 1px solid #B9D8C5 !important;
+    border-radius: 15px;
+    padding: 1.2rem;
+    box-shadow: 0 6px 20px rgba(21, 59, 48, 0.08);
+}
+
+/* TARJETA DE RIESGO: ESCENARIO ADVERSO */
+
+.st-key-impact_risk_card {
+    background-color: #FFF0EB !important;
+    border: 1px solid #EAC4B8 !important;
+    border-radius: 15px;
+    padding: 1.2rem;
 }
 
 /* EXPANSORES */
 
 div[data-testid="stExpander"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E1E9E3;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
+    overflow: hidden;
+}
+
+div[data-testid="stExpander"] summary {
+    color: var(--color-forest);
+    font-weight: 650;
+}
+
+/* TABLAS */
+
+div[data-testid="stTable"] {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stDataFrame {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
 }
 
 /* SEPARADORES */
 
 hr {
-    border-color: #E1E9E3;
+    border-color: var(--color-border);
+    margin: 1.8rem 0;
 }
 
 /* AVISOS */
@@ -150,19 +269,64 @@ div[data-testid="stAlert"] {
     border-radius: 12px;
 }
 
+/* GRÁFICOS */
+
+div[data-testid="stPlotlyChart"] {
+    border-radius: 14px;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 768px) {
     .block-container {
-        padding: 1rem;
+        padding: 1.2rem 1rem 2rem;
     }
 
     .main-header {
-        padding: 1.8rem;
+        padding: 1.8rem 1.4rem;
         border-radius: 16px;
+        margin-bottom: 1.8rem;
     }
 
     .main-header h1 {
         font-size: 2.2rem;
+    }
+
+    .main-header .subtitle {
+        font-size: 0.95rem;
+    }
+
+    div[data-testid="stForm"] {
+        padding: 1.1rem;
+    }
+
+    div[data-testid="stMetric"] {
+        padding: 0.9rem;
+    }
+
+    h2 {
+        font-size: 1.45rem;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .block-container {
+        padding: 0.8rem 0.7rem 1.5rem;
+    }
+
+    .main-header {
+        padding: 1.4rem 1.1rem;
+    }
+
+    .main-header h1 {
+        font-size: 1.9rem;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.5rem;
     }
 }
