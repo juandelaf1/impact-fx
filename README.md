@@ -155,7 +155,7 @@ impact-fx/
 
 ## Ejecución local
 
-> ¿Solo frontend en la nube? Ver [Despliegue del frontend en Streamlit Community Cloud](docs/deploy-streamlit-cloud.md).
+> ¿Solo frontend en la nube? Ver [Despliegue del frontend en Streamlit Community Cloud](docs/deploy-streamlit-cloud.md) (entrypoint: `streamlit_app.py` o `frontend/app.py`).
 
 ### 1) Backend (FastAPI)
 Desde la **raíz del repositorio**:

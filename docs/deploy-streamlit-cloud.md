@@ -14,7 +14,7 @@ Esta guía describe cómo publicar **solo el frontend Streamlit** de Impact FX e
 2. Selecciona:
    - **Repository:** `juandelaf1/impact-fx` (o tu fork)
    - **Branch:** `main` (o la rama que quieras publicar)
-   - **Main file path:** `frontend/app.py`
+   - **Main file path:** `streamlit_app.py` (recomendado, wrapper en raíz) o `frontend/app.py`
 3. (Opcional) Elige la versión de Python compatible (recomendado 3.11, coherente con el proyecto).
 4. Despliega.
 
