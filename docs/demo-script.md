@@ -35,7 +35,7 @@
 ### 4) Técnico y retos (1:30)
 - Stack: Streamlit + FastAPI + tools deterministas + LLM (tool-calling) y fallback determinista.
 - Retos resueltos: coherencia contrato/metadatos, validación de procedencia FX y cálculos, manejo B2/B3/errores, y resiliencia sin fingir tools/LLM.
-- Calidad: 38 tests unitarios/integración de lógica, validación de golden cases y CI (validate/tests/smoke).
+- Calidad: 39 tests unitarios/integración de lógica, validación de golden cases, smoke API y CI (validate/tests/smoke).
 
 ### 5) Cierre (1:00)
 - Aprendizajes: priorizar determinismo, trazabilidad y contratos claros.
