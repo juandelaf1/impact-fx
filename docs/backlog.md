@@ -3,22 +3,24 @@
 Backlog priorizado para lograr un MVP **viable y completo en 4–5 h** (con preparación previa hecha).  
 Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 
+> **Actualización (post-merge backend #15/#22):** componentes base y hardening backend están en `main`; los ítems pendientes se concentran en integración FE↔BE real, benchmark integrado, despliegue y entregables finales.
+
 ## Must — MVP (no negociable, día D)
 | ID | Tarea | Responsable | Dependencias | Estado | Criterio de aceptación |
 |---|---|---|---|---|---|
-| M1 | Cerrar decisiones: stack, LLM principal+fallback (probado con tools), alcance Must | Equipo (Juan,Gema) | — | [ ] | Decisiones en `decision-log.md` (D-003,D-004) y smoke test tools OK |
-| M2 | Repo + estructura + `.gitignore` + `.env.example` + docs base | José Melo | M1 | [ ] | Estructura commiteada, equipo con acceso |
-| M3 | Datos procesados y validados (fx_rates, fee_rules, corridors, project_budgets, `demo_scenarios` EUR→KES) | José Melo | M2 | [ ] | Golden case correcto (1.444.200 / 1.400.874 / Δ 43.326 KES) y esquemas coherentes |
-| M4 | Contratos congelados: API (`/health`,`/chat`) y firmas de tools | Gema, Juan | M1 | [ ] | `docs/api-contract.md` y `shared/contracts/` acordados |
-| M5 | System prompt final (rol, ámbito ODS 9, 10, 17 + sensibilidad impacto/brecha, límites, criterios de decisión) | Gema | M1,M4 | [ ] | Documentado en `docs/agent-design.md`; validado con mentores |
-| M6 | Implementar `get_fx_reference` (lee fixture, devuelve `rate,source,date,is_mock`) | Gema | M3,M4 | [ ] | Retorna tasa EUR→KES correcta desde `fx_rates.json` |
-| M7 | Implementar `calculate_transfer_scenarios` (base, variación, diferencia) | Gema | M3,M4 | [ ] | Coincide con `demo_scenarios.json` (B1) |
-| M8 | Backend: `GET /api/health`, `POST /api/chat` con validación, cliente LLM y orquestación *function calling* | Juan | M4,M5,M6,M7 | [ ] | Llama al LLM, ejecuta tools y devuelve respuesta integrada + errores estandarizados |
-| M9 | Frontend: formulario, vista resultados (2 escenarios, diferencia, supuestos, `tools_used`), estados carga/error, consumo API real | Laura | M4 | [ ] | UI funcional consumiendo `POST /api/chat`, sin hardcode de respuesta final |
+| M1 | Cerrar decisiones: stack, LLM principal+fallback (probado con tools), alcance Must | Equipo (Juan,Gema) | — | [x] | Decisiones registradas (D-003, D-004, D-010) y smoke/tool-calling probado |
+| M2 | Repo + estructura + `.gitignore` + `.env.example` + docs base | José Melo | M1 | [x] | Estructura en repo, equipo con acceso, documentación base disponible |
+| M3 | Datos procesados y validados (fx_rates, fee_rules, corridors, project_budgets, `demo_scenarios` EUR→KES) | José Melo | M2 | [x] | Golden cases en `data/processed/` y validador (`scripts/validate-data.mjs`) en verde |
+| M4 | Contratos congelados: API (`/health`,`/chat`) y firmas de tools | Gema, Juan | M1 | [x] | `docs/api-contract.md` y `shared/contracts/` definidos (ajustes de alineación acordados documentados) |
+| M5 | System prompt final (rol, ámbito ODS 9, 10, 17 + sensibilidad impacto/brecha, límites, criterios de decisión) | Gema | M1,M4 | [~] | Prompt implementado y documentado; pendiente validación final con mentores/equipo (D-009) |
+| M6 | Implementar `get_fx_reference` (lee fixture, devuelve `rate,source,date,is_mock`) | Gema | M3,M4 | [x] | Tool implementada y cubierta por tests/golden cases |
+| M7 | Implementar `calculate_transfer_scenarios` (base, variación, diferencia) | Gema | M3,M4 | [x] | Tool implementada y alineada con escenarios de referencia (B1 y otros) |
+| M8 | Backend: `GET /api/health`, `POST /api/chat` con validación, cliente LLM y orquestación *function calling* | Juan | M4,M5,M6,M7 | [x] | Backend mergeado en `main` con orquestación, fallback determinista, manejo de errores y CI (tests + smoke) |
+| M9 | Frontend: formulario, vista resultados (2 escenarios, diferencia, supuestos, `tools_used`), estados carga/error, consumo API real | Laura | M4 | [~] | UI Streamlit implementada; pendiente validar integración completa con backend real y manejo de 400/422/502/alertas |
 | M10 | Integración end-to-end (caso Kenia) | Todos | M8,M9 | [ ] | Ciclo completo: input → decisión → 2 tools → respuesta integrada en UI |
 | M11 | Benchmark B1–B3 en verde y manejo básico de datos faltantes/ámbito | José (coord.), Gema, Juan | M10 | [ ] | Cifras exactas; pide/supone dato faltante; rechaza ejecución de pagos |
 | M12 | Despliegue (URL) o plan B local verificado; CORS/env correctos | José, Juan | M10 | [ ] | App accesible y operativa |
-| M13 | Entregables documentales: README ejecutable, `ods-justification`, doc técnica (stack/endpoints/prompt/tools), **≥3 interacciones con razonamiento** | José, Gema | M10,M11 | [ ] | Cumple briefing; interacciones capturadas de ejecuciones reales |
+| M13 | Entregables documentales: README ejecutable, `ods-justification`, doc técnica (stack/endpoints/prompt/tools), **≥3 interacciones con razonamiento** | José, Gema | M10,M11 | [~] | Documentación técnica/README avanzados; faltan evidencias finales integradas (interacciones reales) y cierre de entregables |
 | M14 | Guion de demo 8–10 min y ensayo | Todos (coord. José) | M12,M13 | [ ] | Demo fluida mostrando ciclo completo y plan B |
 
 ## Should — Solo si el Must está estable y desplegado
