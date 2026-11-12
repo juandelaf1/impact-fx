@@ -151,3 +151,32 @@ Casos ejecutados desde los scripts locales con el modelo `openai/gpt-oss-20b` me
 - Verificación: respuesta integrada y cifras exactas; el resumen de razonamiento no indica fallback y el panel estructurado identifica ambas herramientas.
 
 **Alcance de esta ejecución:** valida B1 desde la UI con el agente activo y las dos herramientas indicadas por el backend. La tasa sigue siendo ficticia y la prueba no ejecuta pagos ni consulta tasas reales.
+
+## Pruebas de integración Docker Compose — José Melo (2026-11-12)
+
+### Preparación y disponibilidad
+- `node scripts/validate-data.mjs`: pasó; golden cases válidos B1, B1b, B1c, B4 y B5.
+- `docker compose config --quiet`: pasó.
+- `docker compose up --build -d`: primer intento falló por timeout de descarga de dependencias; tras aumentar los reintentos/timeout de instalación, el build terminó correctamente.
+- Para evitar el backend local ya activo en `3001`, los contenedores se publicaron en `3002` (API) y `8502` (Streamlit).
+- `docker compose ps`: backend `healthy`; frontend `healthy`. Desde el contenedor frontend, `GET http://backend:3001/api/health` respondió 200. Desde el host, también respondieron el health del backend y el health endpoint de Streamlit.
+
+### B1 — Interfaz Docker con LLM
+- Entrada: valores por defecto de la UI (10.000 EUR, Kenya/KES, comisión 40 EUR, caída 3 %).
+- Resultado visible: tasa 145 KES/EUR, `demo_reference`, fecha 2026-11-12, `is_mock=true`; base 1.444.200 KES; estrés 1.400.874 KES; diferencia 43.326 KES.
+- La UI explicó el impacto general y aclaró que no había presupuesto detallado por partidas.
+- En esta ejecución interactiva, el panel **AI agent tools used** mostró solo `get_fx_reference`; la respuesta narró el cálculo, pero esa ejecución no confirmó `calculate_transfer_scenarios`.
+- En una segunda llamada del smoke test desde el contenedor frontend, las cifras y las dos tools pasaron. Por tanto, el uso de ambas tools no fue reproducible en todas las llamadas.
+- El smoke test detectó que el backend no devuelve los campos contractuales `agent.fx_reference` ni `agent.is_fallback`.
+
+### B2 y B3 — Pruebas API desde la red Docker
+- B2: petición directa a la API sin `context.amount_eur`; respondió 422. Es validación de API, no una interacción en la UI; el formulario actual exige un monto.
+- B3: petición directa con solicitud de ejecutar un pago; respondió 200 con rechazo y sin herramienta de pagos. La UI no permite enviar esa petición textual, así que no se probó B3 desde el formulario.
+
+### Fallback y demo local
+- Fallback determinista del backend, ejecutado con el contenedor backend recreado sin `LLM_API_KEY`: cifras B1 correctas.
+- La prueba falló en trazabilidad: no existe `agent.is_fallback` y `tools_used` no estaba vacío, aunque la respuesta salió del escenario del fixture y no ejecutó tools.
+- Demo local del frontend: con backend detenido, al enviar el formulario apareció el aviso **Demo preview** y se mostraron las cifras ilustrativas. Esto es distinto del fallback del agente.
+- FX degradado live→fixture no se probó end-to-end; solo tiene cobertura de tool.
+
+**Conclusión de aceptación:** Compose, salud de servicios y conectividad entre contenedores quedaron comprobados. B1–B3 ejercitados a nivel API/UI con los alcances anteriores; el benchmark completo no está en verde por la llamada de tools no reproducible y los campos de trazabilidad ausentes. No se validó impacto presupuestario por partidas.

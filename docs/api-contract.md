@@ -52,6 +52,8 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
   "agent": {
     "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"],
     "reasoning_summary": "Identificó monto, destino y comisión; obtuvo tasa de referencia y calculó escenarios base y -3% para integrar el impacto.",
+    "fx_reference": { "rate": 145.0, "source": "demo_reference", "date": "2026-11-12", "is_mock": true },
+    "is_fallback": false,
     "scenarios": [
       { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 1444200, "currency": "KES" },
       { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 1400874, "currency": "KES" }
@@ -70,6 +72,8 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 | `reply` | string | Respuesta integrada en lenguaje claro (no output crudo de tools) |
 | `agent.tools_used` | string[] | Herramientas ejecutadas |
 | `agent.reasoning_summary` | string | Resumen breve de la decisión/flujo del agente |
+| `agent.fx_reference` | object \| null | Referencia FX efectiva `{rate, source, date, is_mock}`; `null` si no se obtuvo una referencia |
+| `agent.is_fallback` | boolean | `true` si responde el fallback determinista del orquestador; `false` en el flujo normal, incluido el fallback de la fuente FX |
 | `agent.scenarios` | array | Escenarios calculados |
 | `agent.difference` | object | Diferencia entre escenarios `{amount, currency}` |
 | `agent.assumptions` | string[] | Supuestos explícitos (tasa/fuente/fecha/comisión) |
@@ -89,3 +93,5 @@ Formato: `{ "error": "string", "code": "STRING", "details": "string" }`
 - Si falta `fee_eur` y existe regla para la moneda en `data/processed/fee_rules.json`, el backend puede aplicar la comisión por defecto antes de simular.
 - En caso de 422, mostrar `details` (y `reply` si estuviera disponible) para solicitar/corregir el dato faltante.
 - **Plan B / resiliencia:** si el LLM falla, no está disponible o se agotan rondas de tool-calling, el orquestador puede responder en **fallback determinista** desde `demo_scenarios.json` (cuando hay coincidencia), incluyendo motivo y alertas de trazabilidad en `agent`.
+- `FX_SOURCE` es una variable de configuración (`demo`/`live`) que selecciona la fuente preferida. No es equivalente a `agent.fx_reference.source`, que identifica la fuente efectiva de la referencia usada; por ejemplo, una consulta live que degrada al fixture debe informar `source=demo_reference` e `is_mock=true`.
+- **Brecha verificada (2026-11-12):** el backend actual todavía no devuelve `agent.fx_reference` ni `agent.is_fallback`; estos campos forman parte del contrato requerido y necesitan implementación/verificación con el responsable del backend.

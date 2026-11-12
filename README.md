@@ -32,17 +32,18 @@ impact-fx/
 
 ## Configuración
 1. Clonar el repositorio y entrar en la carpeta del proyecto.
-2. Copiar `.env.example` a `.env` en la raíz y completar los valores (nunca commitear `.env`).
+2. Si `.env` todavía no existe, copiar `.env.example` a `.env` en la raíz y completar los valores (nunca commitear `.env` ni sobrescribir una configuración local existente).
    ```bash
    # Linux/macOS
-   cp .env.example .env
+   test -f .env || cp .env.example .env
    # Windows (PowerShell)
-   Copy-Item .env.example .env
+   if (!(Test-Path .env)) { Copy-Item .env.example .env }
    ```
 3. Variables principales:
    - **LLM:** `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (opcional)
    - **Backend:** `PORT` (por defecto `3001`), `CORS_ORIGIN` (por defecto `http://localhost:8501`)
    - **Frontend:** `API_BASE_URL` (URL del backend, por defecto `http://localhost:3001`)
+   - **Fuente FX:** `FX_SOURCE` (`demo` por defecto o `live`); selecciona la fuente preferida, no reemplaza el origen efectivo devuelto por la herramienta.
 
 > La configuración del backend se carga desde `.env` (raíz o `backend/.env`).
 
@@ -69,6 +70,43 @@ streamlit run frontend/app.py
 
 - App: `http://localhost:8501`
 - Consume `API_BASE_URL` (por defecto `http://localhost:3001`). Si el backend no está disponible, la UI puede mostrar un modo demo ilustrativo.
+
+## Ejecución con Docker Compose
+
+Desde la raíz del repositorio, con Docker Desktop en ejecución:
+
+```bash
+# Configura LLM_API_KEY en .env si quieres probar el modo normal con LLM.
+# Conserva cualquier .env existente; no lo sobrescribas con el ejemplo.
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+curl -fsS http://localhost:3001/api/health
+```
+
+Abre `http://localhost:8501`. Dentro de Compose, Streamlit se conecta al servicio `backend` mediante `http://backend:3001`; no se debe usar `localhost` entre contenedores. El puerto del backend y el del frontend pueden cambiarse si ya están ocupados, por ejemplo:
+
+```bash
+BACKEND_HOST_PORT=3002 FRONTEND_HOST_PORT=8502 docker compose up --build -d
+```
+
+En ese caso, la API se publica en `http://localhost:3002` y la UI en `http://localhost:8502`. Para detener los servicios: `docker compose down`. Las variables de `.env` se pasan al contenedor en tiempo de ejecución; `.env` está excluido del contexto de build y no se copia a las imágenes.
+
+Para ejecutar el smoke test integrado desde la red de Compose:
+
+```bash
+docker compose exec frontend python /app/smoke_compose.py
+```
+
+El test valida conectividad, B1, B2 y B3; el modo `--fallback` valida el caso determinista con el backend recreado sin clave:
+
+```bash
+LLM_API_KEY= docker compose up -d --force-recreate backend
+docker compose exec frontend python /app/smoke_compose.py --fallback
+docker compose up -d --force-recreate backend
+```
+
+El smoke test también verifica los campos de trazabilidad exigidos por el contrato. A fecha de esta revisión, detecta que el backend aún no devuelve `agent.fx_reference` ni `agent.is_fallback`, por lo que la validación completa queda pendiente de la implementación del backend.
 
 ## API (resumen)
 - `GET /api/health` → `{ "status": "ok" }`

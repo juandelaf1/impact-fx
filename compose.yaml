@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      LLM_PROVIDER: "${LLM_PROVIDER:-groq}"
+      LLM_API_KEY: "${LLM_API_KEY:-}"
+      LLM_MODEL: "${LLM_MODEL:-openai/gpt-oss-20b}"
+      LLM_BASE_URL: "${LLM_BASE_URL:-}"
+      FX_SOURCE: "${FX_SOURCE:-demo}"
+      PORT: "3001"
+      CORS_ORIGIN: "http://localhost:8501"
+    ports:
+      - "${BACKEND_HOST_PORT:-3001}:3001"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/api/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      API_BASE_URL: "http://backend:3001"
+    ports:
+      - "${FRONTEND_HOST_PORT:-8501}:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

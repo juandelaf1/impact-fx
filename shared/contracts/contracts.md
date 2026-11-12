@@ -34,6 +34,8 @@
   "agent": {
     "tools_used": ["get_fx_reference", "calculate_transfer_scenarios"],
     "reasoning_summary": "Obtuvo tasa de referencia y calculó escenarios base y -3%.",
+    "fx_reference": { "rate": 145.0, "source": "demo_reference", "date": "2026-11-12", "is_mock": true },
+    "is_fallback": false,
     "scenarios": [
       { "name": "base", "rate": 145.0, "fee_eur": 40, "amount_received": 1444200, "currency": "KES" },
       { "name": "stress_-3%", "rate": 140.65, "fee_eur": 40, "amount_received": 1400874, "currency": "KES" }
@@ -44,6 +46,12 @@
   }
 }
 ```
+- `agent.fx_reference` (`object | null`): la referencia FX efectiva (`rate`, `source`, `date`, `is_mock`); `null` cuando no se obtuvo una referencia.
+- `agent.is_fallback` (`boolean`): `true` cuando el orquestador responde mediante fallback determinista; `false` en el flujo normal, incluido un fallback interno de la fuente FX.
+
+`FX_SOURCE` es configuración (`demo`/`live`), no el origen efectivo de la tasa. `agent.fx_reference.source` informa la fuente que realmente produjo la referencia; si una consulta live degrada al fixture, debe ser `demo_reference` con `is_mock=true`.
+
+**Brecha verificada (2026-11-12):** el backend actual no devuelve todavía `agent.fx_reference` ni `agent.is_fallback`. El contrato está documentado, pero estos campos siguen pendientes de implementación y validación integrada.
 
 **Errores:**
 - `400` `{ "error": "invalid_input", "code": "BAD_REQUEST", "details": "..." }`
