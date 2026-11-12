@@ -36,8 +36,8 @@ Verificar que el agente **funciona, decide correctamente, usa herramientas y apo
 5. Repetir smoke test en URL desplegada (o validar plan B local).
 
 ## 6. Checklist de aceptación (go/no-go demo)
-- [ ] B1 en verde (cifras exactas + supuestos + tools). 
-- [ ] B2 no inventa; B3 no ejecuta pagos. 
-- [ ] Respuesta integrada visible en UI (no JSON crudo). 
-- [ ] ≥3 interacciones documentadas con razonamiento. 
-- [ ] Fallback/plan B verificado.
+- [x] B1 en verde (cifras exactas + supuestos + tools). 
+- [x] B2 no inventa; B3 no ejecuta pagos. 
+- [x] Respuesta integrada visible en UI (no JSON crudo). 
+- [x] ≥3 interacciones documentadas con razonamiento. 
+- [x] Fallback/plan B verificado.
