@@ -135,3 +135,14 @@ class TestAgentContract(unittest.TestCase):
         agent = self.assert_contract(run(['get_fx_reference', 'calculate_transfer_scenarios'], runner=runner), False, False)
         self.assertEqual(agent['fx_source'], 'frankfurter')
         self.assertEqual(agent['fx_reference'], FX)
+
+    def test_project_budget_request_is_not_applied_to_demo_budget_impact(self):
+        ctx = {**CONTEXT, 'project_budget': [{'name': 'Custom', 'amount_local': 1}]}
+        agent = self.assert_contract(run(['get_fx_reference', 'calculate_transfer_scenarios'], ctx), False, False)
+        self.assertIn('budget_impact', agent)
+        self.assertTrue(agent['budget_impact']['is_synthetic_demo'])
+        self.assertTrue(any('context.project_budget recibido pero no aplicado' in a for a in agent.get('assumptions', [])))
+
+        fb = self.assert_contract(o._fallback_response(ctx), True, True)
+        self.assertIn('budget_impact', fb)
+        self.assertTrue(any('context.project_budget recibido pero no aplicado' in a for a in fb.get('assumptions', [])))

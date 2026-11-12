@@ -91,7 +91,7 @@ docker compose ps
 - `GET /api/health` → `{ "status": "ok" }`
 - `POST /api/chat` → recibe `message`, `context` e `history`; el agente puede consultar tools y devuelve respuesta integrada:
   - `reply` (texto claro)
-  - `agent`: `tools_used`, `reasoning_summary`, `scenarios`, `difference`, `assumptions`, `alerts`, `execution_mode`, `degraded`, `fx_source`, `calculation_source` y, cuando aplica, `budget_impact`
+  - `agent`: `tools_used`, `reasoning_summary`, `scenarios`, `difference`, `assumptions`, `alerts`, `execution_mode`, `degraded`, `is_fallback`, `fx_source`, `fx_reference`, `calculation_source` y, cuando aplica, `budget_impact`
 
 **Comportamiento relevante:**
 - **MVP corredor:** `EUR→KES` (`destination_country=KE`, `currency=KES`). Combinaciones incoherentes se rechazan.
@@ -101,7 +101,7 @@ docker compose ps
 - Fallos de LLM/tools no controlados en endpoint: **502** (`upstream_failure` / `LLM_OR_TOOL_ERROR`) con mensaje público sanitizado.
 - Si el LLM falla o no se completa una simulación verificada, el orquestador puede devolver **fallback determinista** desde `demo_scenarios.json` (cuando hay coincidencia), con `tools_used=[]`, `execution_mode=deterministic_fallback`, `degraded=true`, `calculation_source=demo_scenarios`.
 - **FX:** `FX_SOURCE=demo` (determinista, por defecto) o `live` (Frankfurter como referencia externa, con fallback local y mocks en tests). Frankfurter no es cotización firme ni precio ejecutable.
-- **Impacto presupuestario (demo):** para B1/KE-HEALTH-001 se calcula de forma determinista cobertura y brecha (100% base, 97% estrés, 43.326 KES de brecha potencial) sin asignar déficit a partidas concretas.
+- **Impacto presupuestario (demo):** para B1/KE-HEALTH-001 se calcula de forma determinista cobertura y brecha (100% base, 97% estrés, 43.326 KES de brecha potencial) sin asignar déficit a partidas concretas. `context.project_budget` se acepta en la API pero, en MVP, no se aplica al cálculo (se usa presupuesto demo fijo y se declara en supuestos).
 
 Detalle completo en [`docs/api-contract.md`](docs/api-contract.md) y [`shared/contracts/contracts.md`](shared/contracts/contracts.md).
 
