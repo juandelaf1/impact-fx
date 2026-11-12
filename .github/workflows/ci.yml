@@ -25,6 +25,24 @@ jobs:
       - name: Validate processed data
         run: node scripts/validate-data.mjs
 
+  backend-tests:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
   backend-smoke:
     name: Backend smoke test (health + chat B1)
     runs-on: ubuntu-latest
@@ -57,4 +75,3 @@ jobs:
 
   # Extender cuando se cierre el stack (D-003):
   # - lint/test/build frontend
-  # - tests unitarios (pytest/unittest)

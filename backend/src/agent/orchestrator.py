@@ -109,11 +109,12 @@ def _run_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     return function(**arguments)
 
 
-def _fallback_response(context: dict[str, Any]) -> dict[str, Any]:
+def _fallback_response(context: dict[str, Any], reason: str | None = None) -> dict[str, Any]:
     """
     Plan B: si el LLM no esta disponible devolvemos el escenario
     determinista de data/processed/demo_scenarios.json (si existe).
     """
+    fallback_note = reason or "LLM no disponible o no se pudo completar la orquestación."
     amount = context.get("amount_eur")
     currency = str(context.get("currency", "KES")).upper()
     variation = float(context.get("scenario_drop_pct", 3)) * -1.0
@@ -159,14 +160,13 @@ def _fallback_response(context: dict[str, Any]) -> dict[str, Any]:
             "agent": {
                 "tools_used": tools_used,
                 "reasoning_summary": (
-                    "Fallback determinista usando demo_scenarios.json por "
-                    "indisponibilidad del LLM."
+                    "Fallback determinista usando demo_scenarios.json. " + fallback_note
                 ),
                 "scenarios": scenarios,
                 "difference": difference,
                 "assumptions": assumptions
-                + ["Resultado generado en modo fallback (LLM no disponible)."],
-                "alerts": [],
+                + [f"Resultado generado en modo fallback: {fallback_note}"],
+                "alerts": ["Respuesta generada en modo fallback determinista."],
             },
         }
 
@@ -178,14 +178,14 @@ def _fallback_response(context: dict[str, Any]) -> dict[str, Any]:
         ),
         "agent": {
             "tools_used": [],
-            "reasoning_summary": "Fallback sin escenario determinista coincidente.",
+            "reasoning_summary": "Fallback sin escenario determinista coincidente. " + fallback_note,
             "scenarios": [],
             "difference": {},
             "assumptions": [
-                "No se pudo contactar el LLM y no hay un escenario determinista "
-                "coincidente."
+                "No hay un escenario determinista coincidente para los datos proporcionados.",
+                f"Motivo: {fallback_note}",
             ],
-            "alerts": [],
+            "alerts": ["No se pudo completar la simulación con los datos disponibles."],
         },
     }
 
@@ -317,7 +317,7 @@ def run_agent(
                 )
 
         # Si se agotan las rondas, caemos al modo determinista.
-        return _fallback_response(context)
+        return _fallback_response(context, reason="Se agotaron las rondas de tool-calling del LLM.")
 
-    except Exception:
-        return _fallback_response(context)
+    except Exception as exc:
+        return _fallback_response(context, reason=f"Fallo del LLM u orquestación: {exc}")
