@@ -129,4 +129,25 @@ Casos ejecutados desde los scripts locales con el modelo `openai/gpt-oss-20b` me
 - Decisión observada: rechaza ejecutar la transferencia, no usa herramientas y ofrece una simulación solicitando la comisión.
 - Observación: la frase sobre utilizar una tasa de la “fecha actual” debe evitarse si los datos proceden del fixture fechado, no de una cotización en vivo.
 
-**Alcance de esta ejecución:** valida los casos B1–B3 en el agente y sus herramientas, no el recorrido completo desde la interfaz a través de la API. La validación end-to-end queda pendiente de la integración descrita en M10/#9.
+**Alcance de esta ejecución:** valida los casos B1–B3 en el agente y sus herramientas, no el recorrido completo desde la interfaz a través de la API. La validación integrada posterior de M10/#9 se registra a continuación.
+
+## Ejecución integrada desde la interfaz — José Melo (2026-11-12)
+
+### B1 — Caso feliz con fallback determinista
+- Recorrido: formulario Streamlit → `POST /api/chat` → backend → escenario de `demo_scenarios.json`.
+- Contexto: 10.000 EUR a Kenia (KES), comisión de 40 EUR y caída del 3 %.
+- Resultado visible en la interfaz: base de 1.444.200 KES; estrés de 1.400.874 KES; diferencia de 43.326 KES menos en el escenario de estrés.
+- Supuestos mostrados: tasa ficticia `demo_reference`, fechada 2026-11-12, y comisión fija de 40 EUR.
+- Verificación: se mostraron ambos escenarios y la explicación de impacto; no apareció el aviso de vista previa local de la interfaz.
+- Modo observado: fallback determinista por indisponibilidad del LLM. El resultado coincide con el fixture, pero no demuestra una llamada real al LLM ni la ejecución de las herramientas.
+
+**Alcance de esta ejecución:** valida el recorrido de la interfaz al backend y al fixture de fallback para B1. Por sí sola no demuestra el uso real de herramientas; la ejecución integrada posterior con el LLM activo queda registrada a continuación.
+
+### B1 — Ejecución integrada con LLM y herramientas
+- Resultado visible: neto de 9.960 EUR; base de 1.444.200 KES; escenario con caída del 3 % de 1.400.874 KES; diferencia de 43.326 KES.
+- Supuestos y explicación: tasa ficticia `demo_reference` del 2026-11-12, comisión de 40 EUR y posible reducción de fondos para el proyecto.
+- Razonamiento mostrado por la interfaz: “El agente respondio integrando los resultados de las herramientas.”
+- Herramientas indicadas en el panel estructurado **AI agent tools used**: `get_fx_reference` y `calculate_transfer_scenarios`.
+- Verificación: respuesta integrada y cifras exactas; el resumen de razonamiento no indica fallback y el panel estructurado identifica ambas herramientas.
+
+**Alcance de esta ejecución:** valida B1 desde la UI con el agente activo y las dos herramientas indicadas por el backend. La tasa sigue siendo ficticia y la prueba no ejecuta pagos ni consulta tasas reales.
