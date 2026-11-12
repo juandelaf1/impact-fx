@@ -1,7 +1,7 @@
 [
   {
     "name": "get_fx_reference",
-    "description": "Obtiene una tasa de cambio desde los datos locales disponibles.",
+    "description": "Obtiene una tasa de referencia local o de Frankfurter según la configuración. Devuelve fuente, fecha e is_mock; si se pide fecha, consulta solo los datos locales.",
     "parameters": {
       "type": "object",
       "properties": {

@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -41,6 +42,7 @@ class FakeClient:
         self.chat = SimpleNamespace(completions=FakeCompletions(tool_calls, final_content))
 
 
+@patch.dict(os.environ, {"FX_SOURCE": "demo"})
 class TestOrchestrator(unittest.TestCase):
     """Comprueba el bucle de tool calling sin llamar al LLM real."""
 
