@@ -143,10 +143,13 @@ if submitted and fee_eur < amount_eur:
                 st.session_state["results"] = response_data
                 st.session_state["demo_mode"] = False
                 st.session_state.pop("connection_error", None)
+                st.session_state.pop("connection_error_status", None)
 
             except APIError as error:
                 st.session_state.pop("results", None)
+                st.session_state.pop("demo_mode", None)
                 st.session_state["connection_error"] = str(error)
+                st.session_state["connection_error_status"] = getattr(error, "status_code", None)
 
         else:
             st.session_state["results"] = get_demo_response(
@@ -157,6 +160,7 @@ if submitted and fee_eur < amount_eur:
 
             st.session_state["demo_mode"] = True
             st.session_state.pop("connection_error", None)
+            st.session_state.pop("connection_error_status", None)
 
 
 # --------------------------------------------------
@@ -164,17 +168,24 @@ if submitted and fee_eur < amount_eur:
 # --------------------------------------------------
 
 if st.session_state.get("connection_error"):
-    st.error(
-        f"Could not process the transfer: "
-        f"{st.session_state['connection_error']}"
-    )
+    status = st.session_state.get("connection_error_status")
+    msg = st.session_state["connection_error"]
+    if status == 422:
+        st.warning(f"Missing data: {msg}")
+        st.info("Please provide the missing information (e.g. amount, destination currency, or fee) and try again. No figures are estimated without required data.")
+    elif status == 400:
+        st.error(f"Invalid input: {msg}")
+    elif status == 502:
+        st.error(f"Service error: {msg}")
+    else:
+        st.error(f"Could not process the transfer: {msg}")
 
 if st.session_state.get("results"):
 
     render_results(
         st.session_state["results"],
         demo_mode=st.session_state.get("demo_mode", False)
-    )
+    )
 
 
 # --------------------------------------------------

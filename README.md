@@ -68,20 +68,40 @@ streamlit run frontend/app.py
 ```
 
 - App: `http://localhost:8501`
-- Consume `API_BASE_URL` (por defecto `http://localhost:3001`). Si el backend no está disponible, la UI puede mostrar un modo demo ilustrativo.
+- Consume `API_BASE_URL` (por defecto `http://localhost:3001`). Si el backend no está disponible, la UI puede mostrar un modo demo ilustrativo (**Local demo preview**, sin backend/tools).
+
+### 3) Ejecución con Docker Compose (recomendado para demo)
+Desde la raíz del repositorio:
+
+```bash
+docker compose config
+docker compose up --build -d
+docker compose ps
+```
+
+- Backend: `http://127.0.0.1:3001` (health: `/api/health`)
+- Frontend: `http://127.0.0.1:8501` (con `API_BASE_URL=http://backend:3001` en red interna)
+- Configuración por defecto: `FX_SOURCE=demo` (determinista). Variables LLM (`LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL`) se pasan por entorno; sin API key válida, el backend puede usar **fallback determinista** si existe escenario coincidente.
+- Logs: `docker compose logs -f backend frontend`
+- Parada: `docker compose down`
+
+> No incluir `.env` ni secretos en las imágenes. No exponer la demo local como despliegue de producción.
 
 ## API (resumen)
 - `GET /api/health` → `{ "status": "ok" }`
 - `POST /api/chat` → recibe `message`, `context` e `history`; el agente puede consultar tools y devuelve respuesta integrada:
   - `reply` (texto claro)
-  - `agent.tools_used`, `agent.reasoning_summary`, `agent.scenarios`, `agent.difference`, `agent.assumptions`, `agent.alerts`
+  - `agent`: `tools_used`, `reasoning_summary`, `scenarios`, `difference`, `assumptions`, `alerts`, `execution_mode`, `degraded`, `fx_source`, `calculation_source` y, cuando aplica, `budget_impact`
 
 **Comportamiento relevante:**
+- **MVP corredor:** `EUR→KES` (`destination_country=KE`, `currency=KES`). Combinaciones incoherentes se rechazan.
 - Si falta `fee_eur` y existe regla para la moneda, se aplica la comisión por defecto desde `data/processed/fee_rules.json`.
-- Si faltan datos mínimos de simulación sin valor/regla, la API responde **422** (`missing_data` / `UNPROCESSABLE`).
-- Errores de entrada: **400** (`invalid_input` / `BAD_REQUEST`).
-- Fallos de LLM/tools no controlados en endpoint: **502** (`upstream_failure` / `LLM_OR_TOOL_ERROR`).
-- Si el LLM falla o no está disponible, el orquestador puede devolver **fallback determinista** desde `demo_scenarios.json` (cuando hay coincidencia), incluyendo motivo/alertas de trazabilidad.
+- Si faltan datos mínimos de simulación sin valor/regla (B2), la API responde **422** (`missing_data` / `UNPROCESSABLE`) con detalle claro.
+- Errores de entrada/corredor: **400** (`invalid_input` / `BAD_REQUEST`).
+- Fallos de LLM/tools no controlados en endpoint: **502** (`upstream_failure` / `LLM_OR_TOOL_ERROR`) con mensaje público sanitizado.
+- Si el LLM falla o no se completa una simulación verificada, el orquestador puede devolver **fallback determinista** desde `demo_scenarios.json` (cuando hay coincidencia), con `tools_used=[]`, `execution_mode=deterministic_fallback`, `degraded=true`, `calculation_source=demo_scenarios`.
+- **FX:** `FX_SOURCE=demo` (determinista, por defecto) o `live` (Frankfurter como referencia externa, con fallback local y mocks en tests). Frankfurter no es cotización firme ni precio ejecutable.
+- **Impacto presupuestario (demo):** para B1/KE-HEALTH-001 se calcula de forma determinista cobertura y brecha (100% base, 97% estrés, 43.326 KES de brecha potencial) sin asignar déficit a partidas concretas.
 
 Detalle completo en [`docs/api-contract.md`](docs/api-contract.md) y [`shared/contracts/contracts.md`](shared/contracts/contracts.md).
 

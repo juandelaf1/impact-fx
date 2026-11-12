@@ -81,39 +81,112 @@ class TestOrchestrator(unittest.TestCase):
         self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
         self.assertEqual(agent["scenarios"][1]["amount_received"], 1400874)
         self.assertEqual(agent["difference"]["amount"], 43326)
-        self.assertIn("Tasa de referencia 145.0", agent["assumptions"][0])
+        self.assertEqual(agent["execution_mode"], "llm_tools")
+        self.assertFalse(agent["degraded"])
+        self.assertEqual(agent["calculation_source"], "financial_engine")
+        self.assertTrue(any("Tasa de referencia 145.0" in a for a in agent.get("assumptions", [])))
         self.assertIn("KES", result["reply"])
 
-    def test_currency_is_injected_from_context(self):
+    def test_llm_cannot_override_financial_parameters(self):
+        # LLM intenta manipular importe, tasa, moneda y variación; el backend debe usar contexto/tasa verificada
         tool_calls = [
+            _tool_call("call_1", "get_fx_reference", {"base": "USD", "quote": "GHS"}),
             _tool_call(
-                "call_1",
+                "call_2",
                 "calculate_transfer_scenarios",
                 {
-                    "amount_eur": 10000,
-                    "rate": 145.0,
-                    "fee_eur": 40,
-                    "variations": [-3],
+                    "amount_eur": 1,
+                    "rate": 9999,
+                    "fee_eur": 0,
+                    "currency": "USD",
+                    "variations": [-50],
                 },
             ),
         ]
-        client = FakeClient(tool_calls, "Listo.")
-
+        client = FakeClient(tool_calls, "Respuesta del modelo.")
+        context = {
+            "amount_eur": 10000,
+            "destination_country": "KE",
+            "currency": "KES",
+            "fee_eur": 40,
+            "scenario_drop_pct": 3,
+        }
         with patch.object(orchestrator, "_get_llm_client", return_value=client):
-            result = orchestrator.run_agent(
-                "Enviar 10000 EUR a Kenia",
-                {
-                    "amount_eur": 10000,
-                    "destination_country": "KE",
-                    "currency": "KES",
-                    "fee_eur": 40,
-                    "scenario_drop_pct": 3,
-                },
-            )
+            result = orchestrator.run_agent("Manipula los datos", context)
 
-        # La herramienta recibio currency desde el contexto y pudo calcular.
-        self.assertEqual(result["agent"]["scenarios"][0]["currency"], "KES")
-        self.assertEqual(result["agent"]["scenarios"][0]["amount_received"], 1444200)
+        agent = result["agent"]
+        self.assertEqual(agent["execution_mode"], "llm_tools")
+        self.assertFalse(agent["degraded"])
+        self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
+        self.assertEqual(agent["scenarios"][1]["amount_received"], 1400874)
+        self.assertEqual(agent["difference"]["amount"], 43326)
+        self.assertEqual(agent["scenarios"][0]["currency"], "KES")
+
+    def test_reply_without_tools_uses_honest_fallback_when_context_allows(self):
+        client = FakeClient([], "Te explico sin usar herramientas.")
+        context = {
+            "amount_eur": 10000,
+            "destination_country": "KE",
+            "currency": "KES",
+            "fee_eur": 40,
+            "scenario_drop_pct": 3,
+        }
+        with patch.object(orchestrator, "_get_llm_client", return_value=client):
+            result = orchestrator.run_agent("Dime el resultado sin calcular", context)
+
+        agent = result["agent"]
+        self.assertEqual(agent["execution_mode"], "deterministic_fallback")
+        self.assertTrue(agent["degraded"])
+        self.assertEqual(agent["tools_used"], [])
+        self.assertEqual(agent["calculation_source"], "demo_scenarios")
+        self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
+        self.assertEqual(agent["difference"]["amount"], 43326)
+
+    def test_tool_error_does_not_expose_unverified_scenarios(self):
+        # FX falla -> cálculo no verificable -> fallback determinista honesto (mismo contexto B1)
+        def fake_run_tool(name, arguments):
+            if name == "get_fx_reference":
+                return {"error": "fx unavailable"}
+            return {"scenarios": [], "difference": {}}
+
+        client = FakeClient([_tool_call("call_1", "get_fx_reference", {"base": "EUR", "quote": "KES"})], "Fin")
+        context = {
+            "amount_eur": 10000,
+            "destination_country": "KE",
+            "currency": "KES",
+            "fee_eur": 40,
+            "scenario_drop_pct": 3,
+        }
+        with patch.object(orchestrator, "_get_llm_client", return_value=client), \
+             patch.object(orchestrator, "_run_tool", side_effect=fake_run_tool):
+            result = orchestrator.run_agent("Simula", context)
+
+        agent = result["agent"]
+        self.assertEqual(agent["execution_mode"], "deterministic_fallback")
+        self.assertTrue(agent["degraded"])
+        self.assertEqual(agent["tools_used"], [])
+        self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
+
+    def test_max_rounds_exhausted_returns_honest_fallback(self):
+        tool_calls = [_tool_call("call_loop", "get_fx_reference", {"base": "EUR", "quote": "KES"})]
+        client = FakeClient(tool_calls, "nunca llega")
+        context = {
+            "amount_eur": 10000,
+            "destination_country": "KE",
+            "currency": "KES",
+            "fee_eur": 40,
+            "scenario_drop_pct": 3,
+        }
+        with patch.object(orchestrator, "_get_llm_client", return_value=client), \
+             patch.object(orchestrator, "MAX_ROUNDS", 1):
+            result = orchestrator.run_agent("Simula", context)
+
+        agent = result["agent"]
+        self.assertEqual(agent["execution_mode"], "deterministic_fallback")
+        self.assertTrue(agent["degraded"])
+        self.assertEqual(agent["tools_used"], [])
+        self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
+        self.assertEqual(agent["difference"]["amount"], 43326)
 
     def test_fallback_when_llm_unavailable(self):
         with patch.object(
@@ -131,10 +204,13 @@ class TestOrchestrator(unittest.TestCase):
             )
 
         agent = result["agent"]
+        self.assertEqual(agent["execution_mode"], "deterministic_fallback")
+        self.assertTrue(agent["degraded"])
+        self.assertEqual(agent["tools_used"], [])
         self.assertIn("fallback", agent["reasoning_summary"].lower())
         self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
         self.assertEqual(agent["scenarios"][1]["amount_received"], 1400874)
-        self.assertEqual(agent["difference"]["amount"], 43326)
+        self.assertEqual(agent["difference"]["amount"], 43326)
 
 
 if __name__ == "__main__":

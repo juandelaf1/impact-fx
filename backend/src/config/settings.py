@@ -22,8 +22,9 @@ class Settings:
     llm_model: str = os.getenv("LLM_MODEL", "openai/gpt-oss-20b")
     llm_base_url: str = os.getenv("LLM_BASE_URL", "")
     port: int = int(os.getenv("PORT", "3001"))
-    cors_origin: str = os.getenv("CORS_ORIGIN", "http://localhost:8501")
-    data_dir: Path = BASE_DIR / "data" / "processed"
+    # Lista de orígenes permitidos separados por coma (demo local por defecto)
+    cors_origin: str = os.getenv("CORS_ORIGIN", "http://localhost:8501,http://127.0.0.1:8501")
+    data_dir: Path = BASE_DIR / "data" / "processed"
 
 
 settings = Settings()

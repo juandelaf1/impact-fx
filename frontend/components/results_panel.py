@@ -57,40 +57,85 @@ def create_impact_donut(stress_amount: float, difference: float):
 def render_results(data: dict, demo_mode: bool = False):
     """Muestra los escenarios y la explicación del agente."""
 
-    agent = data.get("agent", {})
+    agent = data.get("agent", {}) or {}
     scenarios = agent.get("scenarios", [])
     difference = agent.get("difference", {})
     reasoning_summary = agent.get("reasoning_summary", "")
-    
-    st.divider()
+    execution_mode = agent.get("execution_mode")
+    degraded = bool(agent.get("degraded", False))
+    fx_source = agent.get("fx_source")
+    calculation_source = agent.get("calculation_source")
 
+    st.divider()
     st.subheader("Your transfer impact")
 
-    if demo_mode:
-        st.info(
-            "Demo preview · These are illustrative figures, "
-            "not results from the live backend."
-        )
+    # Modo de ejecución / procedencia (contrato congelado)
+    if demo_mode or execution_mode == "frontend_demo":
+        st.info("Local demo preview · Illustrative local figures only (no backend/tools execution).")
+    elif execution_mode == "deterministic_fallback" or degraded:
+        st.warning("Deterministic fallback · Degraded response from demo_scenarios.json (LLM/tool flow not completed).")
+    elif execution_mode == "llm_tools":
+        st.success("AI + tools · LLM executed tools and backend verified the deterministic calculation.")
+    else:
+        st.caption("Execution mode: unknown")
+
+    meta_bits = []
+    if execution_mode:
+        meta_bits.append(f"execution_mode={execution_mode}")
+    if fx_source:
+        meta_bits.append(f"fx_source={fx_source}")
+    if calculation_source:
+        meta_bits.append(f"calculation_source={calculation_source}")
+    meta_bits.append(f"degraded={str(degraded).lower()}")
+    st.caption(" · ".join(meta_bits))
+
+    if fx_source == "demo":
+        st.caption("FX source: demo/fixture (fictional reference rate).")
+    elif fx_source == "frankfurter":
+        st.caption("FX source: Frankfurter (external reference, not a firm quote or executable price).")
 
     # Explicación del agente
     reply = data.get("reply")
-
     if reply:
         st.markdown("### Impact FX analysis")
         st.write(reply)
 
     if reasoning_summary:
-        with st.expander("How the AI agent reached its conclusions"):
+        with st.expander("How the result was produced"):
             st.write(reasoning_summary)
+
+    # Resumen de importe enviado, comisión y neto (cuando hay escenarios)
+    if len(scenarios) >= 1:
+        s0 = scenarios[0] or {}
+        fee = s0.get("fee_eur")
+        rate = s0.get("rate")
+        currency = s0.get("currency", "")
+        amount_received = float(s0.get("amount_received", 0) or 0)
+        try:
+            net_amount_eur = (amount_received / float(rate)) if rate else None
+        except Exception:
+            net_amount_eur = None
+        amount_sent = (float(net_amount_eur) + float(fee)) if (net_amount_eur is not None and fee is not None) else None
+        info_cols = st.columns(4)
+        with info_cols[0]:
+            if amount_sent is not None:
+                st.metric("Amount sent (EUR)", f"{amount_sent:,.2f}")
+        with info_cols[1]:
+            if fee is not None:
+                st.metric("Transfer fee (EUR)", f"{float(fee):,.2f}")
+        with info_cols[2]:
+            if net_amount_eur is not None:
+                st.metric("Net amount to convert (EUR)", f"{net_amount_eur:,.2f}")
+        with info_cols[3]:
+            if currency:
+                st.metric("Destination currency", currency)
 
     # Tarjetas de escenarios
     if len(scenarios) >= 2:
         cols = st.columns(2)
-
         for index, scenario in enumerate(scenarios[:2]):
             with cols[index]:
                 is_base = scenario.get("name") == "base"
-
                 if is_base:
                     label = "Base scenario"
                     description = "Reference exchange rate"
@@ -103,17 +148,32 @@ def render_results(data: dict, demo_mode: bool = False):
 
                 st.metric(
                     label=f"Amount received ({scenario.get('currency', '')})",
-                    value=f"{scenario.get('amount_received', 0):,.0f}",
-                    delta=(
-                        f"{scenario.get('rate', 0):,.2f} "
-                        "local currency / EUR"
-                    ),
-                    delta_color="off"
+                    value=f"{float(scenario.get('amount_received', 0) or 0):,.0f}",
+                    delta=(f"{float(scenario.get('rate', 0) or 0):,.2f} local currency / EUR"),
+                    delta_color="off",
                 )
 
-                st.caption(
-                    f"Transfer fee: {scenario.get('fee_eur', 0):,.2f} EUR"
-                )
+                st.caption(f"Transfer fee: {float(scenario.get('fee_eur', 0) or 0):,.2f} EUR")
+
+    # Impacto presupuestario (si está disponible y verificado en respuesta)
+    budget_impact = agent.get("budget_impact")
+    if budget_impact and isinstance(budget_impact, dict):
+        st.markdown("### Project budget impact")
+        b1, b2, b3, b4 = st.columns(4)
+        b1.metric("Project budget (KES)", f"{float(budget_impact.get('budget_total', 0) or 0):,.0f}")
+        b2.metric("Base coverage", f"{float(budget_impact.get('base_coverage_pct', 0) or 0):,.2f}%")
+        b3.metric("Stress coverage", f"{float(budget_impact.get('stress_coverage_pct', 0) or 0):,.2f}%")
+        b4.metric("Potential funding gap (KES)", f"{float(budget_impact.get('budget_gap', 0) or 0):,.0f}")
+        st.caption(
+            "Under this illustrative stress scenario, available funds would cover "
+            f"{float(budget_impact.get('stress_coverage_pct', 0) or 0):.0f}% of the sample project budget, "
+            f"leaving a potential funding gap of {float(budget_impact.get('budget_gap', 0) or 0):,.0f} KES. "
+            "This does not attribute the shortfall to specific budget items and is not an actual loss."
+        )
+        if budget_impact.get("is_synthetic_demo"):
+            st.caption("Budget shown is synthetic/demo data (KE-HEALTH-001).")
+
+    st.caption("Estimate only (not a firm quote). Potential difference, not an actual loss. Simulation only — no payment is executed.")
 
          # Impact comparison: explanation + compact donut
     if len(scenarios) >= 2:
@@ -193,19 +253,23 @@ def render_results(data: dict, demo_mode: bool = False):
             for assumption in assumptions:
                 st.write(f"• {assumption}")
 
-    # Herramientas utilizadas
+    # Herramientas utilizadas (solo ejecuciones reales)
     tools_used = agent.get("tools_used", [])
-
-    if tools_used:
-        with st.expander("AI agent tools used"):
+    with st.expander("Execution details"):
+        st.write(f"Execution mode: {execution_mode or 'n/a'}")
+        st.write(f"Degraded: {str(degraded).lower()}")
+        st.write(f"FX source: {fx_source or 'n/a'}")
+        st.write(f"Calculation source: {calculation_source or 'n/a'}")
+        if tools_used:
+            st.write("Tools executed successfully:")
             for tool in tools_used:
                 st.write(f"• {tool}")
+        else:
+            st.write("Tools executed successfully: none")
 
     # Alertas
     alerts = agent.get("alerts", [])
-
     if alerts:
         st.markdown("### Important alerts")
-
         for alert in alerts:
-            st.warning(alert)
+            st.warning(alert)

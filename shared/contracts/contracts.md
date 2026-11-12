@@ -40,19 +40,31 @@
     ],
     "difference": { "amount": 43326, "currency": "KES" },
     "assumptions": ["Tasa de referencia ficticia (demo_reference, 2026-11-12, is_mock=true)", "Comisión fija 40 EUR"],
-    "alerts": []
+    "alerts": [],
+    "execution_mode": "llm_tools",
+    "degraded": false,
+    "fx_source": "demo",
+    "calculation_source": "financial_engine"
   }
 }
-```
+```
 
 **Errores:**
 - `400` `{ "error": "invalid_input", "code": "BAD_REQUEST", "details": "..." }`
-- `422` `{ "error": "missing_data", "code": "UNPROCESSABLE", "details": "..." }` (faltan datos mínimos de simulación sin valor/regla inferible, o request de chat no procesable; el detalle se entrega en `details`)
-- `502` `{ "error": "upstream_failure", "code": "LLM_OR_TOOL_ERROR", "details": "..." }`
+- `422` `{ "error": "missing_data", "code": "UNPROCESSABLE", "details": "..." }` (faltan datos mínimos de simulación sin valor/regla inferible, o request no procesable; detalle en `details`, p. ej. B2)
+- `502` `{ "error": "upstream_failure", "code": "LLM_OR_TOOL_ERROR", "details": "..." }` (mensaje público sanitizado)
 
-**Notas de comportamiento (implementación actual):**
+**Metadatos de ejecución (congelados):**
+- `execution_mode`: `llm_tools` | `deterministic_fallback` (backend). `frontend_demo` solo frontend.
+- `degraded`: `true`/`false`.
+- `fx_source`: `demo` | `frankfurter` (independiente de `execution_mode`).
+- `calculation_source`: `financial_engine` | `demo_scenarios` | `frontend_preview` (frontend).
+- `tools_used`: solo tools ejecutadas correctamente; fallback determinista sin tools reales ⇒ `[]`.
+
+**Notas de comportamiento:**
 - Si falta `fee_eur` y existe regla para la moneda en `data/processed/fee_rules.json`, el backend puede aplicar la comisión por defecto.
-- Ante fallo/indisponibilidad del LLM o agotamiento de rondas, el orquestador puede devolver respuesta 200 en **fallback determinista** desde `demo_scenarios.json` (si hay coincidencia), incluyendo motivo/alertas en `agent`.
+- Fallback determinista: `execution_mode=deterministic_fallback`, `degraded=true`, `calculation_source=demo_scenarios`, sin fingir tools LLM.
+- CI/golden B1 con `FX_SOURCE=demo`; live FX con mocks en tests. Frankfurter = referencia externa, no cotización firme ni precio ejecutable.
 
 ## Tools (function calling)
 

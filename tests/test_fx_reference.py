@@ -108,15 +108,27 @@ class TestFxReference(unittest.TestCase):
                                                {'base': 'EUR', 'quote': 'KES'})], 'Referencia obtenida.')
                 request = patch(TARGET, return_value=response(PAYLOAD)) if live else patch(TARGET, side_effect=URLError('offline'))
                 warning = nullcontext() if live else self.assertWarns(RuntimeWarning)
+                # Contexto completo permite fallback determinista honesto si no hay simulación verificada
+                context = {
+                    "amount_eur": 10000,
+                    "destination_country": "KE",
+                    "currency": "KES",
+                    "fee_eur": 40,
+                    "scenario_drop_pct": 3,
+                }
                 with request, warning, patch.object(orchestrator, '_get_llm_client', return_value=client):
-                    result = orchestrator.run_agent('Referencia EUR/KES', {})
+                    result = orchestrator.run_agent('Referencia EUR/KES', context)
                 messages = client.chat.completions.calls[-1]['messages']
-                tool_result = json.loads(next(m['content'] for m in messages if m['role'] == 'tool'))
+                tool_msgs = [m for m in messages if m.get('role') == 'tool']
+                tool_result = json.loads(tool_msgs[0]['content'])
                 self.assertEqual(tool_result['is_mock'], not live)
                 self.assertEqual(tool_result['rate'], 144.76 if live else 145)
-                self.assertIn('frankfurter' if live else 'demo_reference', result['agent']['assumptions'][0])
-                self.assertIn('is_mock=False' if live else 'is_mock=True', result['agent']['assumptions'][0])
-                self.assertEqual(result['agent']['tools_used'], ['get_fx_reference'])
+                # Sin FX+cálculo verificado, el resultado final es fallback determinista honesto
+                self.assertEqual(result['agent'].get('execution_mode'), 'deterministic_fallback')
+                self.assertTrue(result['agent'].get('degraded'))
+                self.assertEqual(result['agent'].get('tools_used'), [])
+                self.assertEqual(result['agent'].get('calculation_source'), 'demo_scenarios')
+                self.assertEqual(result['agent']['scenarios'][0]['amount_received'], 1444200)
 
     def test_agent_calculates_with_rate_returned_by_live_tool(self):
         client = FakeClient([], 'Listo.')
@@ -126,23 +138,33 @@ class TestFxReference(unittest.TestCase):
             if not results:
                 calls = [_tool_call('fx', 'get_fx_reference', {'base': 'EUR', 'quote': 'KES'})]
             elif len(results) == 1:
-                rate = json.loads(results[0]['content'])['rate']
+                # El LLM intenta pasar parámetros, pero el backend debe usar contexto/tasa verificada
                 calls = [_tool_call('calc', 'calculate_transfer_scenarios', {
-                    'amount_eur': 10000, 'fee_eur': 40, 'rate': rate,
-                    'currency': 'KES', 'variations': [-3],
+                    'amount_eur': 1, 'fee_eur': 0, 'rate': 1,
+                    'currency': 'USD', 'variations': [-50],
                 })]
             else:
                 calls = []
             return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(
                 content='Simulación completada.' if not calls else None, tool_calls=calls))])
 
+        context = {
+            "amount_eur": 10000,
+            "destination_country": "KE",
+            "currency": "KES",
+            "fee_eur": 40,
+            "scenario_drop_pct": 3,
+        }
         with patch(TARGET, return_value=response(PAYLOAD)), patch.object(
             orchestrator, '_get_llm_client', return_value=client
         ), patch.object(client.chat.completions, 'create', side_effect=complete):
-            result = orchestrator.run_agent('Enviar 10000 EUR a Kenia', {'currency': 'KES'})
+            result = orchestrator.run_agent('Enviar 10000 EUR a Kenia', context)
         self.assertEqual(result['agent']['scenarios'][0]['amount_received'], 1441809.6)
         self.assertEqual(result['agent']['tools_used'], ['get_fx_reference', 'calculate_transfer_scenarios'])
-        self.assertIn('is_mock=False', result['agent']['assumptions'][0])
+        self.assertTrue(any('is_mock=False' in a for a in result['agent'].get('assumptions', [])))
+        self.assertEqual(result['agent'].get('fx_source'), 'frankfurter')
+        self.assertEqual(result['agent'].get('execution_mode'), 'llm_tools')
+        self.assertFalse(result['agent'].get('degraded'))
 
     def test_today_uses_api_and_preserves_publication_date(self):
         with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock:
