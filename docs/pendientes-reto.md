@@ -11,7 +11,7 @@
 - [x] Manejo de errores: 400 `invalid_input`, 422 `missing_data` (B2, sin cifras inventadas), 502 sanitizado; B3 no ejecuta pagos.
 - [x] Frontend Streamlit MVP: formulario, consumo API, preview local (`frontend_demo`), panel de resultados (escenarios, diferencia, supuestos, metadatos, `budget_impact`, alertas).
 - [x] Datos y golden cases (`B1`, `B1b`, `B1c`, B4, B5) + `scripts/validate-data.mjs` OK.
-- [x] Pruebas: `python -m unittest discover -s tests -v` → **38/38 OK**; `scripts/smoke_backend.py` disponible.
+- [x] Pruebas: `python -m unittest discover -s tests -v` → **39/39 OK**; `scripts/smoke_backend.py` disponible y verificado en local (B1/400).
 - [x] Docker: `Dockerfile.backend`, `Dockerfile.frontend`, `docker-compose.yml`, `.dockerignore`, `docker compose config` válido.
 - [x] CI en verde (validate data, backend unit tests, backend smoke test) en PRs mergeadas.
 - [x] Contratos compartidos y API actualizados con campos aditivos y semántica (`docs/api-contract.md`, `shared/contracts/contracts.md`).

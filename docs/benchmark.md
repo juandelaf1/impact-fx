@@ -37,14 +37,15 @@ node scripts/validate-data.mjs
 python -m unittest discover -s tests -v
 ```
 
-## 6. Resultados observados (evidencia real en `main` @ `a82d44a`)
+## 6. Resultados observados (evidencia real, `main` actualizado con PR #34)
 
 ### 6.1 Automatizados
 | Ejecución | Resultado | Observaciones |
 |---|---|---|
 | `node scripts/validate-data.mjs` | **OK** | Golden cases válidos (B1, B1b, B1c, B4, B5) |
-| `python -m unittest discover -s tests -v` | **38/38 OK** | Incluye `test_agent_contract`, `test_budget_impact`, `test_fx_reference`, `test_orchestrator`, `test_tools` (B1/0% drop/fallback/guardrails/procedencia FX/validación) |
-| CI PR #32 y #33 | **Verde** | Validate data, backend unit tests y backend smoke test en verde antes de merge |
+| `python -m unittest discover -s tests -v` | **39/39 OK** | Incluye `test_agent_contract`, `test_budget_impact`, `test_fx_reference`, `test_orchestrator`, `test_tools` (B1/0% drop/fallback/guardrails/procedencia FX/validación, `project_budget` no aplicado en MVP) |
+| `python scripts/smoke_backend.py` (API local, 2026-11-12) | **OK** | `/api/health`, B1 (1.444.200 / 1.400.874 / Δ 43.326 KES, tools reales) y `message` vacío → 400 |
+| CI PR #32, #33 y #34 | **Verde** | Validate data, backend unit tests y backend smoke test en verde |
 
 ### 6.2 API / comportamiento (verificación ejecutada)
 | ID | Resultado | Evidencia observada |
@@ -58,9 +59,9 @@ python -m unittest discover -s tests -v
 ### 6.3 Pendiente de evidencia adicional (manual/E2E visual)
 | Área | Estado | Nota |
 |---|---|---|
-| E2E UI Streamlit (B1–B3, degradado, fallback, errores 400/422/502) | Pendiente de captura | Validar presentación en interfaz y capturas reales |
-| Docker runtime en contenedores (`docker compose up --build`) | Pendiente de captura | `docker compose config` OK; ejecución en contenedor depende de daemon/entorno |
-| LLM real end-to-end en entorno final | Parcial | Flujo y contrato cubiertos por tests/mocks y verificaciones previas; confirmar en entorno de demo con credenciales/configuración final |
+| E2E UI Streamlit (B1–B3, degradado, fallback, errores 400/422/502) | Pendiente de captura | Validar presentación en interfaz y capturas reales (incl. `fx_reference` prominente y distinción degradado vs fallback, pendientes de Laura) |
+| Docker runtime en contenedores (`docker compose up --build`) | Pendiente de captura | `docker compose config` OK; intento local bloqueado por daemon Docker no disponible; requiere entorno con daemon activo |
+| LLM real end-to-end en entorno final | Parcial | Flujo/contrato y verificaciones API local en verde; confirmar con credenciales/configuración de demo final |
 
 ## 7. Formato de registro por ejecución (para nuevas evidencias)
 - **ID, fecha, ejecutor, entorno** (local/Docker/URL), modelo/`FX_SOURCE`, respuesta, `tools_used`, `execution_mode/degraded/is_fallback/fx_reference/fx_source/calculation_source`, ¿correcto?, incidencias y captura/enlace.

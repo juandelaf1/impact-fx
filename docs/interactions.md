@@ -84,5 +84,5 @@
 ---
 
 ## Notas de ejecución
-- Evidencias I1–I4: verificaciones reales sobre API/orquestador en `main` (`a82d44a`, 2026-11-12) con `FX_SOURCE=demo`.
+- Evidencias I1–I4: verificaciones reales sobre API/orquestador y API local en `main` (post PR #34, 2026-11-12) con `FX_SOURCE=demo` (incluye `scripts/smoke_backend.py` OK y comprobaciones B1–B3).
 - Para cierre final de demo: complementar con capturas de UI Streamlit y, si aplica, ejecución en Docker/entorno desplegado con configuración final.
