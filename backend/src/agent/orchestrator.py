@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-import os
+import math
+from datetime import date as calendar_date
 from pathlib import Path
 from typing import Any
 
@@ -110,6 +111,33 @@ def _run_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     return function(**arguments)
 
 
+def _validated_fx_reference(result: Any) -> dict[str, Any]:
+    """Accept only complete metadata from a successful FX tool execution."""
+    if not isinstance(result, dict) or result.get("error"):
+        raise ValueError("Respuesta FX inválida.")
+    rate = result.get("rate")
+    if isinstance(rate, bool) or not isinstance(rate, (int, float)) or not math.isfinite(rate) or rate <= 0:
+        raise ValueError("Tasa FX inválida.")
+    if not isinstance(result.get("source"), str) or not result["source"].strip():
+        raise ValueError("Fuente FX ausente.")
+    date = result.get("date")
+    if not isinstance(date, str) or calendar_date.fromisoformat(date).isoformat() != date:
+        raise ValueError("Fecha FX inválida.")
+    if not isinstance(result.get("is_mock"), bool):
+        raise ValueError("Indicador is_mock inválido.")
+    return {key: result[key] for key in ("rate", "source", "date", "is_mock")}
+
+
+def _verified_calculation(result: Any, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Verify tool/fixture results against the existing deterministic engine."""
+    expected = calculate_transfer_scenarios(**arguments)
+    if not isinstance(result, dict) or result.get("error"):
+        raise ValueError("Cálculo inválido.")
+    if result.get("scenarios") != expected["scenarios"] or result.get("difference") != expected["difference"]:
+        raise ValueError("Escenarios o diferencia no coinciden con el cálculo verificado.")
+    return expected
+
+
 def _maybe_budget_impact(context: dict[str, Any], scenarios: list[dict[str, Any]]) -> dict[str, Any] | None:
     if not scenarios or len(scenarios) < 2:
         return None
@@ -141,11 +169,11 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
     fallback_note = reason or "LLM no disponible o no se pudo completar la orquestación."
     amount = context.get("amount_eur")
     currency = str(context.get("currency", "KES")).upper()
-    variation = float(context.get("scenario_drop_pct", 3)) * -1.0
     fee = context.get("fee_eur")
 
     scenario = None
     try:
+        variation = -abs(float(context.get("scenario_drop_pct", 3)))
         if amount is not None:
             scenario = find_demo_scenario(
                 float(amount),
@@ -153,6 +181,16 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
                 variation,
                 None if fee is None else float(fee),
             )
+        if scenario:
+            expected = scenario["expected"]
+            fixture_fee = expected["scenarios"][0]["fee_eur"] if fee is None else fee
+            _verified_calculation(expected, {
+                "amount_eur": amount,
+                "rate": expected["reference_rate"],
+                "fee_eur": fixture_fee,
+                "variations": [variation],
+                "currency": currency,
+            })
     except Exception:
         scenario = None
 
@@ -269,7 +307,7 @@ def run_agent(
         trusted_amount = context.get("amount_eur")
         trusted_fee = context.get("fee_eur")
         try:
-            trusted_drop_pct = float(context.get("scenario_drop_pct", 3) or 3)
+            trusted_drop_pct = float(context.get("scenario_drop_pct", 3))
         except Exception:
             trusted_drop_pct = 3.0
         trusted_variation = -abs(trusted_drop_pct)
@@ -293,7 +331,7 @@ def run_agent(
                 if verified:
                     scenarios = calc_result.get("scenarios") or []
                     difference = calc_result.get("difference") or {}
-                    fx_source = "frankfurter" if str(fx_reference.get("source")) == "frankfurter" else "demo"
+                    fx_source = "demo" if fx_reference["is_mock"] else fx_reference["source"]
                     budget_impact = _maybe_budget_impact(context, scenarios)
                     fx_meta = None
                     if isinstance(fx_reference, dict):
@@ -340,7 +378,7 @@ def run_agent(
                     "alerts": ["No hay escenarios respaldados por cálculo determinista verificado en esta respuesta."],
                     "execution_mode": "llm_tools",
                     "degraded": True,
-                    "fx_source": ("frankfurter" if fx_reference and str(fx_reference.get("source")) == "frankfurter" else "demo"),
+                    "fx_source": (("demo" if fx_reference["is_mock"] else fx_reference["source"]) if fx_reference else None),
                     "calculation_source": "none",
                     "fx_reference": fx_meta,
                     "is_fallback": False,
@@ -383,15 +421,23 @@ def run_agent(
 
                 # Binding/validaci?n de argumentos desde fuentes confiables
                 if name == "get_fx_reference":
+                    # A fresh FX attempt invalidates calculations tied to the previous rate.
+                    fx_reference = None
+                    calc_result = None
+                    scenarios = []
+                    difference = {}
                     if not trusted_base or not trusted_quote or len(trusted_quote) != 3:
                         result = {"error": "Corredor/moneda no disponible o inv?lido en contexto validado."}
                     else:
                         safe_args = {"base": trusted_base, "quote": trusted_quote}
                         try:
-                            result = _run_tool(name, safe_args)
+                            result = _validated_fx_reference(_run_tool(name, safe_args))
                         except Exception as exc:
                             result = {"error": str(exc)}
                 elif name == "calculate_transfer_scenarios":
+                    calc_result = None
+                    scenarios = []
+                    difference = {}
                     if fx_reference is None or fx_reference.get("rate") is None:
                         result = {"error": "No hay tasa de referencia verificada. Ejecuta get_fx_reference primero."}
                     elif trusted_amount is None or trusted_fee is None or not trusted_currency:
@@ -405,7 +451,7 @@ def run_agent(
                             "currency": trusted_currency,
                         }
                         try:
-                            result = _run_tool(name, safe_args)
+                            result = _verified_calculation(_run_tool(name, safe_args), safe_args)
                         except Exception as exc:
                             result = {"error": str(exc)}
                 else:
