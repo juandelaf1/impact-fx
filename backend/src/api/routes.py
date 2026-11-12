@@ -124,6 +124,8 @@ def chat(req: ChatRequest):
                 "degraded": True,
                 "fx_source": "demo",
                 "calculation_source": "demo_scenarios",
+                "fx_reference": None,
+                "is_fallback": True,
             }
         return result
     except Exception:
