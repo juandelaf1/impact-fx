@@ -15,8 +15,8 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 | M7 | Implementar `calculate_transfer_scenarios` (base, variación, diferencia) | Gema | M3,M4 | [ ] | Coincide con `demo_scenarios.json` (B1) |
 | M8 | Backend: `GET /api/health`, `POST /api/chat` con validación, cliente LLM y orquestación *function calling* | Juan | M4,M5,M6,M7 | [ ] | Llama al LLM, ejecuta tools y devuelve respuesta integrada + errores estandarizados |
 | M9 | Frontend: formulario, vista resultados (2 escenarios, diferencia, supuestos, `tools_used`), estados carga/error, consumo API real | Laura | M4 | [ ] | UI funcional consumiendo `POST /api/chat`, sin hardcode de respuesta final |
-| M10 | Integración end-to-end (caso Kenia) | Todos | M8,M9 | [ ] | Ciclo completo: input → decisión → 2 tools → respuesta integrada en UI |
-| M11 | Benchmark B1–B3 en verde y manejo básico de datos faltantes/ámbito | José (coord.), Gema, Juan | M10 | [ ] | Cifras exactas; pide/supone dato faltante; rechaza ejecución de pagos |
+| M10 | Integración end-to-end (caso Kenia) | Todos | M8,M9 | [x] | Ciclo completo: input → decisión → 2 tools → respuesta integrada en UI |
+| M11 | Benchmark B1–B3 en verde y manejo básico de datos faltantes/ámbito | José (coord.), Gema, Juan | M10 | [x] | Cifras exactas; pide/supone dato faltante; rechaza ejecución de pagos |
 | M12 | Despliegue (URL) o plan B local verificado; CORS/env correctos | José, Juan | M10 | [ ] | App accesible y operativa |
 | M13 | Entregables documentales: README ejecutable, `ods-justification`, doc técnica (stack/endpoints/prompt/tools), **≥3 interacciones con razonamiento** | José, Gema | M10,M11 | [ ] | Cumple briefing; interacciones capturadas de ejecuciones reales |
 | M14 | Guion de demo 8–10 min y ensayo | Todos (coord. José) | M12,M13 | [ ] | Demo fluida mostrando ciclo completo y plan B |
