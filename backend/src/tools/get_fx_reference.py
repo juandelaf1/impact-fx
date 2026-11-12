@@ -67,7 +67,8 @@ def get_fx_reference(
 ) -> dict:
     """
     Busca una tasa local o de Frankfurter según FX_SOURCE (demo por defecto).
-    Las consultas con fecha concreta siempre utilizan los datos locales.
+    En modo live, hoy o sin fecha consulta la última referencia publicada.
+    Las demás fechas utilizan los datos locales.
 
     Parámetros:
         base: moneda de origen, por ejemplo "EUR".
@@ -106,9 +107,11 @@ def get_fx_reference(
     if fx_source not in {"demo", "live"}:
         raise ValueError("FX_SOURCE debe ser demo o live.")
 
-    # Si estamos en modo live y no se solicita una fecha concreta,
-    # intentamos obtener el tipo de cambio desde Frankfurter.
-    if fx_source == "live" and date is None:
+    # En modo live, hoy y sin fecha consultan la última referencia publicada.
+    # Conservamos su fecha real, que puede ser anterior a hoy.
+    if fx_source == "live" and (
+        date is None or date == calendar_date.today().isoformat()
+    ):
         try:
             # Consultamos la API externa.
             return fetch_frankfurter_rate(base, quote)

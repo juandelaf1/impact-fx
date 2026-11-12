@@ -13,8 +13,11 @@ en tiempo real ni importes de transferencia garantizados.
 Si hay un error de red o una respuesta inválida, se emite `RuntimeWarning` y se
 busca el mismo par en los datos locales, conservando su fuente, fecha e indicador
 `is_mock=True`. Si ese par no existe, se devuelve un error, sin inventar una tasa.
-Las consultas con `date` siguen usando exclusivamente los datos locales, incluso
-en modo live; no se sustituye una fecha solicitada por la cotización más reciente.
+En modo live, omitir `date` o indicar la fecha de hoy (según la fecha local del
+servidor) consulta la última referencia publicada en Frankfurter. Se conserva la
+fecha real de publicación, aunque sea anterior a hoy. Las demás fechas siguen
+consultando exclusivamente los datos locales. Si falla la API al pedir hoy, el
+fallback exige un dato local de ese mismo día; no utiliza otra fecha en silencio.
 Otros valores de `FX_SOURCE` producen un error de configuración.
 
 Las pruebas de API simulan respuestas y fallos sin depender de internet:

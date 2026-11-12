@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 from contextlib import nullcontext
+from datetime import date as calendar_date
 from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from types import SimpleNamespace
@@ -42,7 +43,8 @@ class TestFxReference(unittest.TestCase):
                 request.assert_not_called()
 
     def test_historical_lookup_remains_local(self):
-        with patch(TARGET) as request:
+        with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock, patch(TARGET) as request:
+            clock.today.return_value = calendar_date(2026, 11, 13)
             result = get_fx_reference('EUR', 'KES', '2026-11-12')
             self.assertTrue(result['is_mock'])
             with self.assertRaises(ValueError):
@@ -141,3 +143,43 @@ class TestFxReference(unittest.TestCase):
         self.assertEqual(result['agent']['scenarios'][0]['amount_received'], 1441809.6)
         self.assertEqual(result['agent']['tools_used'], ['get_fx_reference', 'calculate_transfer_scenarios'])
         self.assertIn('is_mock=False', result['agent']['assumptions'][0])
+
+    def test_today_uses_api_and_preserves_publication_date(self):
+        with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock:
+            clock.today.return_value = calendar_date(2026, 11, 12)
+            with patch(TARGET, return_value=response(PAYLOAD)) as request:
+                result = get_fx_reference('EUR', 'KES', '2026-11-12')
+            request.assert_called_once()
+            self.assertFalse(result['is_mock'])
+            self.assertEqual(result['date'], '2026-11-11')
+            self.assertEqual(result['rate'], 144.76)
+
+    def test_today_in_demo_does_not_use_api(self):
+        with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock:
+            clock.today.return_value = calendar_date(2026, 11, 12)
+            with patch.dict(os.environ, {'FX_SOURCE': 'demo'}), patch(TARGET) as request:
+                result = get_fx_reference('EUR', 'KES', '2026-11-12')
+            request.assert_not_called()
+            self.assertTrue(result['is_mock'])
+
+    def test_today_failure_requires_matching_local_date(self):
+        with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock:
+            for day, available in [(12, True), (13, False)]:
+                with self.subTest(day=day):
+                    clock.today.return_value = calendar_date(2026, 11, day)
+                    with patch(TARGET, side_effect=URLError('offline')) as request, self.assertWarns(RuntimeWarning):
+                        if available:
+                            result = get_fx_reference('EUR', 'KES', '2026-11-12')
+                            self.assertTrue(result['is_mock'])
+                            self.assertEqual(result['date'], '2026-11-12')
+                        else:
+                            with self.assertRaisesRegex(ValueError, '2026-11-13'):
+                                get_fx_reference('EUR', 'KES', '2026-11-13')
+                    request.assert_called_once()
+
+    def test_future_date_does_not_use_latest_api_rate(self):
+        with patch('backend.src.tools.get_fx_reference.calendar_date', wraps=calendar_date) as clock, patch(TARGET) as request:
+            clock.today.return_value = calendar_date(2026, 11, 12)
+            with self.assertRaises(ValueError):
+                get_fx_reference('EUR', 'KES', '2026-11-13')
+            request.assert_not_called()
