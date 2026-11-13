@@ -87,14 +87,15 @@ def _cache_set(base: str, quote: str, payload: dict) -> None:
 
 
 def _cb_allow_call() -> bool:
+    global _FX_CB_FAILURES, _FX_CB_OPEN_UNTIL
     threshold = _fx_cb_failure_threshold()
     if threshold <= 0:
         return True
     now = time.monotonic()
     with _FX_LOCK:
-        if _FX_CB_OPEN_UNTIL > now:
+        if now < _FX_CB_OPEN_UNTIL:
             return False
-        if _FX_CB_OPEN_UNTIL and _FX_CB_OPEN_UNTIL <= now:
+        if _FX_CB_OPEN_UNTIL and now >= _FX_CB_OPEN_UNTIL:
             # Fin de cooldown: permitir intento de half-open implícito.
             _FX_CB_OPEN_UNTIL = 0.0
             _FX_CB_FAILURES = 0
@@ -118,7 +119,7 @@ def _cb_record_failure() -> None:
         return
     with _FX_LOCK:
         _FX_CB_FAILURES += 1
-        if _FX_CB_FAILURES >= threshold:
+        if threshold <= _FX_CB_FAILURES:
             _FX_CB_OPEN_UNTIL = time.monotonic() + _fx_cb_cooldown_seconds()
 
 
