@@ -9,8 +9,9 @@
   --color-brand-500: #3f8282;
   --color-brand-100: #e6f1f1;
   --color-brand-50: #f2f8f8;
-  --color-surface: #f7f9f9;
-  --color-ink: #0f172a;
+  --color-sand-50: #fffaf3;
+  --color-sand-100: #f7efe3;
+  --color-ink: #1f2937;
 }
 
 :root {
@@ -23,7 +24,13 @@ html, body, #root {
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: var(--color-surface);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   color: var(--color-ink);
+  background:
+    radial-gradient(900px 420px at -5% -10%, rgba(42, 107, 107, 0.18), transparent 60%),
+    radial-gradient(700px 360px at 105% 0%, rgba(217, 180, 120, 0.18), transparent 55%),
+    radial-gradient(600px 300px at 50% 100%, rgba(16, 64, 64, 0.10), transparent 60%),
+    linear-gradient(180deg, #fbfdfc 0%, #f6f8f7 40%, #fffaf3 100%);
 }
+
+* { box-sizing: border-box; }
