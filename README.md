@@ -1,7 +1,10 @@
-# Impact FX — Reto Ebury + Fundación Somos F5 (Grupo 1)
+<p align="center">
+  <img src="docs/assets/impact-fx-banner.png" alt="Impact FX banner" width="100%" />
+</p>
 
-> **Simulación transparente del impacto cambiario en transferencias para proyectos sociales.**
-> Agente de IA que estima cuánto recibe realmente un socio local, compara escenarios de tipo de cambio y comunica el impacto con trazabilidad, supuestos explícitos y límites claros.
+<h1 align="center">Impact FX</h1>
+<p align="center"><strong>Simulación transparente del impacto cambiario en transferencias para proyectos sociales</strong></p>
+<p align="center">Agente de IA (MVP) que estima cuánto recibe realmente un socio local, compara escenarios de tipo de cambio y comunica el impacto con trazabilidad, supuestos explícitos y límites claros.</p>
 
 <p align="center">
   <a href="https://github.com/juandelaf1/impact-fx/actions/workflows/ci.yml"><img src="https://github.com/juandelaf1/impact-fx/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
@@ -10,15 +13,12 @@
   <img src="https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit" />
   <img src="https://img.shields.io/badge/LLM-Tool%20Calling%20(Groq%20%7C%20OpenAI--compatible)-412991?logo=openai&logoColor=white" alt="LLM Tool Calling" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" />
-  <img src="https://img.shields.io/badge/Tests-46%20passing%20%7C%20coverage-64%25-success" alt="Tests y cobertura" />
+  <img src="https://img.shields.io/badge/Node.js-18%2B%20(data%20validation)-339933?logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Tests-46%20passing%20%7C%20coverage%2064%25-success" alt="Tests y cobertura" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License MIT" /></a>
-  <img src="https://img.shields.io/badge/Status-MVP%20operativo-orange" alt="Status" />
+  <img src="https://img.shields.io/badge/Status-MVP%20operativo-orange" alt="Status MVP" />
   <img src="https://img.shields.io/badge/ODS-9%20%7C%2010%20%7C%2017-0a7ea4" alt="ODS 9,10,17" />
 </p>
-
-- **ODS:** 9 (Industria, innovación e infraestructura), 10 (Reducción de las desigualdades) y 17 (Alianzas para lograr los objetivos).
-- **Stack:** Frontend **Streamlit (Python)** · Backend **FastAPI (Python)** · Agente LLM con *function/tool calling* (Groq u OpenAI-compatible).
-- **Alcance:** MVP acotado y robusto (corredor principal EUR→KES, 2 escenarios, 2 tools). Agnóstico por diseño (los datos de cobertura viven en `data/processed/`), sin ejecución de pagos ni asesoría vinculante.
 
 ---
 
@@ -122,6 +122,8 @@ pip install -r requirements.txt
 > El backend carga la configuración desde `.env` (raíz o `backend/.env`).
 
 ---
+
+> ¿Solo frontend en la nube? Ver [Despliegue del frontend en Streamlit Community Cloud](docs/deploy-streamlit-cloud.md) (entrypoint: `streamlit_app.py` o `frontend/app.py`).
 
 ## 4. Ejecución local
 
