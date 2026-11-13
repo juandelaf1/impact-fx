@@ -151,6 +151,18 @@ Casos ejecutados desde los scripts locales con el modelo `openai/gpt-oss-20b` me
 - Verificación: respuesta integrada y cifras exactas; el resumen de razonamiento no indica fallback y el panel estructurado identifica ambas herramientas.
 
 **Alcance de esta ejecución:** valida B1 desde la UI con el agente activo y las dos herramientas indicadas por el backend. La tasa sigue siendo ficticia y la prueba no ejecuta pagos ni consulta tasas reales.
+## Verificación Docker runtime E2E (API) — 2026-11-13
+
+Entorno: Docker 29.5.3, `docker compose up --build -d` (backend/frontend healthy), `FX_SOURCE=demo`, stack desmontado tras pruebas.
+
+| Caso | Resultado | Evidencia observada |
+|---|---|---|
+| **B1** | Pass | `execution_mode=llm_tools`, `degraded=false`, `is_fallback=false`, `fx_source=demo`, `fx_reference={rate:145.0, source:"demo_reference", date:"2026-11-12", is_mock:true}`, escenarios **1.444.200 / 1.400.874 KES**, Δ **43.326 KES**, `tools_used=["get_fx_reference","calculate_transfer_scenarios"]`, `budget_impact.stress_coverage_pct=97.0` |
+| **B2** | Pass | HTTP **422** `{"error":"missing_data","code":"UNPROCESSABLE","details":"context.amount_eur: Field required"}` |
+| **B3** | Pass (sin ejecución) | HTTP **200**, respuesta rechaza ejecución y ofrece/realiza simulación; no se ejecuta pago. `tools_used=["get_fx_reference","calculate_transfer_scenarios"]`, `is_fallback=false` |
+
+**Alcance:** evidencia API/E2E en contenedores (backend + frontend healthy). Pendiente: capturas E2E de UI Streamlit, validación visual de `fx_reference` prominente y distinción degradado vs fallback en navegador, y ejecución en entorno desplegado final.
+
 ## Notas de ejecución
-- Evidencias I1–I4: verificaciones reales sobre API/orquestador y API local en `main` (post PR #34, 2026-11-12) con `FX_SOURCE=demo` (incluye `scripts/smoke_backend.py` OK y comprobaciones B1–B3).
-- Para cierre final de demo: complementar con capturas de UI Streamlit y, si aplica, ejecución en Docker/entorno desplegado con configuración final.
+- Evidencias previas (I1–I4 y ejecuciones locales): verificaciones reales sobre API/orquestador y API local en `main` (post PR #34, 2026-11-12) con `FX_SOURCE=demo` (incluye `scripts/smoke_backend.py` OK y comprobaciones B1–B3).
+- MVP presentado (post-reto). Para cierre documental final: complementar con capturas de UI Streamlit, interacciones reales finales y validación en entorno desplegado con configuración definitiva.

@@ -65,7 +65,9 @@ def render_results(data: dict, demo_mode: bool = False):
     reasoning_summary = agent.get("reasoning_summary", "")
     execution_mode = agent.get("execution_mode")
     degraded = bool(agent.get("degraded", False))
+    is_fallback = bool(agent.get("is_fallback", False))
     fx_source = agent.get("fx_source")
+    fx_reference = agent.get("fx_reference")
     calculation_source = agent.get("calculation_source")
     reply = data.get("reply", "")
 
@@ -78,10 +80,15 @@ def render_results(data: dict, demo_mode: bool = False):
             "Vista de demostración · Cifras orientativas generadas localmente; "
             "no proceden del backend conectado."
         )
-    elif execution_mode == "deterministic_fallback" or degraded:
+    elif execution_mode == "deterministic_fallback" or is_fallback:
         st.warning(
-            "Modo alternativo · Respuesta de respaldo. "
-            "El flujo completo de IA y herramientas no ha finalizado."
+            "Fallback determinista · Respuesta generada sin flujo LLM/tools ejecutado. "
+            "Resultados basados en datos deterministas/fallback; estimación, no cotización firme."
+        )
+    elif degraded:
+        st.warning(
+            "Modo degradado · La respuesta puede estar incompleta o no totalmente verificada, "
+            "pero no es un fallback determinista completo."
         )
     elif execution_mode == "llm_tools":
         st.success(
@@ -98,16 +105,36 @@ def render_results(data: dict, demo_mode: bool = False):
         meta_bits.append(f"fuente_tipo_cambio={fx_source}")
     if calculation_source:
         meta_bits.append(f"fuente_calculo={calculation_source}")
-    meta_bits.append(f"respaldo={str(degraded).lower()}")
+    meta_bits.append(f"degradado={str(degraded).lower()}")
+    meta_bits.append(f"fallback={str(is_fallback).lower()}")
     st.caption(" · ".join(meta_bits))
 
-    if fx_source == "demo":
-        st.caption("Tipo de cambio: datos de demostración (tipo de referencia ficticio).")
-    elif fx_source == "frankfurter":
-        st.caption(
-            "Tipo de cambio: Frankfurter (referencia externa; "
-            "no es una cotización bancaria vinculante ni un precio ejecutable)."
-        )
+    st.markdown("#### Referencia de tipo de cambio (trazabilidad)")
+    if isinstance(fx_reference, dict) and fx_reference.get("rate") is not None:
+        fx_cols = st.columns(4)
+        fx_cols[0].metric("Tasa", f"{float(fx_reference.get('rate', 0) or 0):,.4f}")
+        fx_cols[1].metric("Fuente", str(fx_reference.get("source") or fx_source or "n/d"))
+        fx_cols[2].metric("Fecha", str(fx_reference.get("date") or "n/d"))
+        fx_cols[3].metric("Dato ficticio", "Sí" if fx_reference.get("is_mock") else "No")
+        if fx_source == "demo" or fx_reference.get("is_mock"):
+            st.caption("Referencia de demostración (ficticia/orientativa). No es cotización firme.")
+        elif fx_source == "frankfurter" or fx_reference.get("source") == "frankfurter":
+            st.caption(
+                "Referencia externa (Frankfurter). No es cotización bancaria vinculante ni precio ejecutable."
+            )
+    else:
+        if is_fallback or execution_mode == "deterministic_fallback":
+            st.info(
+                "Referencia FX no disponible en este resultado (modo fallback determinista: no se ejecutó `get_fx_reference`)."
+            )
+        else:
+            st.caption("Referencia FX no disponible en la respuesta del agente.")
+        if fx_source == "demo":
+            st.caption("Tipo de cambio (categoría): datos de demostración.")
+        elif fx_source == "frankfurter":
+            st.caption(
+                "Tipo de cambio (categoría): Frankfurter (referencia externa; no cotización ejecutable)."
+            )
 
     if reply:
         with st.expander("Análisis de Impact FX"):
