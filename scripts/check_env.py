@@ -52,6 +52,7 @@ def main() -> int:
     load_dotenv(ENV_PATH, override=True)
     api_key = os.getenv("LLM_API_KEY")
     model = os.getenv("LLM_MODEL")
+    provider = os.getenv("LLM_PROVIDER", "groq")
 
     step("2) Variables de configuracion")
     if api_key:
@@ -66,9 +67,7 @@ def main() -> int:
         print(f"{FAIL} Falta LLM_MODEL en .env (usa openai/gpt-oss-20b en Groq)")
         problems += 1
 
-    if model and model.startswith("llama"):
-        print(f"{WARN} '{model}' no estaba disponible en Groq; usa openai/gpt-oss-20b")
-        problems += 1
+    print(f"{OK} LLM_PROVIDER = {provider}")
 
     if problems:
         print(f"\nCorrige {problems} problema(s) antes de continuar.")
@@ -76,9 +75,11 @@ def main() -> int:
 
     step("3) Conexion con el modelo")
     try:
-        from groq import Groq
+        # Se usa el mismo cliente que el backend para validar la configuracion real.
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from backend.src.agent.orchestrator import _get_llm_client
 
-        client = Groq(api_key=api_key)
+        client = _get_llm_client()
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": "Responde solo: OK"}],
@@ -141,9 +142,7 @@ def main() -> int:
             },
             "history": [],
         }
-        response = requests.post(
-            f"{base_url}/api/chat", json=payload, timeout=90
-        )
+        response = requests.post(f"{base_url}/api/chat", json=payload, timeout=90)
         data = response.json()
         agent = data.get("agent") or {}
 

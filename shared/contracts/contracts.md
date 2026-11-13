@@ -1,11 +1,19 @@
 # Contratos compartidos (API y Tools)
 
 > Contratos **congelados** para el MVP. Cualquier cambio debe acordarse (evita romper la integración front-back-agente).
+>
+> **Extensiones aditivas v0.2 (2026-11-13):** el contrato base no cambia. Se añaden `429 rate_limited`, `GET /api/ready`, `GET /api/version`, la cabecera `X-Request-ID` y el límite de `history`. Detalle en [`docs/api-contract.md`](../../docs/api-contract.md#extensiones-aditivas-v02).
 
 ## API REST
 
 ### `GET /api/health`
 - **200**: `{ "status": "ok" }`
+
+### `GET /api/ready` *(aditivo v0.2)*
+- **200**: `{ "status": "ready" | "degraded", "checks": { "fx_rates.json": "ok", ... }, "version": "0.2.0" }`
+
+### `GET /api/version` *(aditivo v0.2)*
+- **200**: `{ "name": "Impact FX API", "version": "0.2.0", "environment": "development" }`
 
 ### `POST /api/chat`
 **Request (JSON):**
@@ -52,7 +60,11 @@
 **Errores:**
 - `400` `{ "error": "invalid_input", "code": "BAD_REQUEST", "details": "..." }`
 - `422` `{ "error": "missing_data", "code": "UNPROCESSABLE", "details": "..." }` (faltan datos mínimos de simulación sin valor/regla inferible, o request no procesable; detalle en `details`, p. ej. B2)
+- `429` `{ "error": "rate_limited", "code": "TOO_MANY_REQUESTS", "details": "..." }` *(aditivo v0.2: límite por cliente y ventana; `details` indica los segundos de espera)*
 - `502` `{ "error": "upstream_failure", "code": "LLM_OR_TOOL_ERROR", "details": "..." }` (mensaje público sanitizado)
+
+**Cabeceras de respuesta:**
+- `X-Request-ID`: identificador de correlación presente en todas las respuestas *(aditivo v0.2)*.
 
 **Metadatos de ejecución (congelados):**
 - `execution_mode`: `llm_tools` | `deterministic_fallback` (backend). `frontend_demo` solo frontend.
@@ -64,6 +76,9 @@
 **Notas de comportamiento:**
 - Si falta `fee_eur` y existe regla para la moneda en `data/processed/fee_rules.json`, el backend puede aplicar la comisión por defecto.
 - Fallback determinista: `execution_mode=deterministic_fallback`, `degraded=true`, `calculation_source=demo_scenarios`, sin fingir tools LLM.
+- El corredor soportado se determina desde `data/processed/corridors.json` (matriz de cobertura en datos, no en código).
+- `history` admite como máximo `MAX_HISTORY_MESSAGES` (20 por defecto) elementos;(superado, `400 invalid_input`) *(aditivo v0.2)*.
+- Si llega `context.project_budget`, la respuesta incluye un `alert` indicando que el MVP todavía no lo aplica *(aditivo v0.2)*.
 - CI/golden B1 con `FX_SOURCE=demo`; live FX con mocks en tests. Frankfurter = referencia externa, no cotización firme ni precio ejecutable.
 
 ## Tools (function calling)

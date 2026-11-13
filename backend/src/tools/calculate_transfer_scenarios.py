@@ -12,8 +12,8 @@ def _to_decimal(value, field_name: str) -> Decimal:
         # Decimal evita errores de precisión durante los cálculos.
         # Pasamos por texto para no arrastrar la imprecisión de float.
         number = Decimal(str(value))
-    except InvalidOperation:
-        raise ValueError(f"{field_name} no es un número válido.")
+    except InvalidOperation as exc:
+        raise ValueError(f"{field_name} no es un número válido.") from exc
 
     # No aceptamos valores especiales como infinito o NaN.
     if not number.is_finite():
@@ -94,9 +94,7 @@ def calculate_transfer_scenarios(
 
     # Escenario con variación:
     # 145 × (1 + (-3 / 100)) = 140.65 KES por EUR.
-    scenario_rate = reference_rate * (
-        Decimal("1") + variation / Decimal("100")
-    )
+    scenario_rate = reference_rate * (Decimal("1") + variation / Decimal("100"))
     scenario_received = net_amount * scenario_rate
 
     # Positiva: llega menos dinero que en el escenario base.

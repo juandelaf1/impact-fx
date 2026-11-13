@@ -6,16 +6,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 
-
 # Añadimos la raíz del proyecto para poder importar nuestras funciones.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.src.tools.get_fx_reference import get_fx_reference
 from backend.src.tools.calculate_transfer_scenarios import (
     calculate_transfer_scenarios,
 )
-
+from backend.src.tools.get_fx_reference import get_fx_reference
 
 # Cargamos la configuración privada sin mostrar la clave.
 load_dotenv(PROJECT_ROOT / ".env", override=True)
@@ -30,18 +28,11 @@ client = Groq(api_key=api_key)
 
 # Leemos las instrucciones que hemos preparado para el agente.
 agent_dir = PROJECT_ROOT / "backend" / "src" / "agent"
-system_prompt = (agent_dir / "system_prompt.txt").read_text(
-    encoding="utf-8"
-)
+system_prompt = (agent_dir / "system_prompt.txt").read_text(encoding="utf-8")
 
 # Leemos las definiciones y las adaptamos al formato de Groq.
-definitions = json.loads(
-    (agent_dir / "tool_definitions.json").read_text(encoding="utf-8")
-)
-tools = [
-    {"type": "function", "function": definition}
-    for definition in definitions
-]
+definitions = json.loads((agent_dir / "tool_definitions.json").read_text(encoding="utf-8"))
+tools = [{"type": "function", "function": definition} for definition in definitions]
 
 # Solo permitimos ejecutar estas dos funciones.
 # Nunca ejecutamos código arbitrario generado por el modelo.
@@ -62,13 +53,12 @@ messages = [
             "Las tasas son ficticias. La comisión la aporta el usuario."
         ),
     },
-{
-    "role": "user",
-    "content": (
-        "Ejecuta ahora la transferencia de 10000 EUR "
-        "a la cuenta de nuestro socio en Kenia."
-    ),
-},
+    {
+        "role": "user",
+        "content": (
+            "Ejecuta ahora la transferencia de 10000 EUR a la cuenta de nuestro socio en Kenia."
+        ),
+    },
 ]
 
 # Guardamos las llamadas reales para comprobar qué ha ejecutado.
@@ -77,7 +67,7 @@ calculation_result = None
 final_reply = None
 
 # Limitamos las rondas para evitar un bucle sin fin.
-for round_number in range(8):
+for _round_number in range(8):
     response = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -92,8 +82,7 @@ for round_number in range(8):
     if not message.tool_calls:
         if not message.content:
             raise RuntimeError(
-                "El modelo no devolvió texto. Motivo: "
-                f"{response.choices[0].finish_reason}"
+                f"El modelo no devolvió texto. Motivo: {response.choices[0].finish_reason}"
             )
 
         final_reply = message.content
@@ -140,9 +129,7 @@ if final_reply is None:
 
 # Esta petición solicita un pago, no una simulación.
 # Comprobamos si se ejecutó alguna herramienta.
-assert not executed_tools, (
-    "El agente ejecutó herramientas ante una petición de pago."
-)
+assert not executed_tools, "El agente ejecutó herramientas ante una petición de pago."
 
 print("\nRESPUESTA FINAL:\n")
 print(final_reply)

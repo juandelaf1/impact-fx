@@ -30,9 +30,7 @@ def fetch_frankfurter_rate(base: str, quote: str) -> dict:
         with urlopen(url, timeout=8) as response:
             data = json.load(response)
     except (OSError, HTTPException) as error:
-        raise ConnectionError(
-            "No se pudo consultar Frankfurter."
-        ) from error
+        raise ConnectionError("No se pudo consultar Frankfurter.") from error
 
     try:
         if not isinstance(data, dict):
@@ -109,9 +107,7 @@ def get_fx_reference(
 
     # En modo live, hoy y sin fecha consultan la última referencia publicada.
     # Conservamos su fecha real, que puede ser anterior a hoy.
-    if fx_source == "live" and (
-        date is None or date == calendar_date.today().isoformat()
-    ):
+    if fx_source == "live" and (date is None or date == calendar_date.today().isoformat()):
         try:
             # Consultamos la API externa.
             return fetch_frankfurter_rate(base, quote)
@@ -129,7 +125,6 @@ def get_fx_reference(
             # Continuamos con el JSON local, que devuelve
             # is_mock=True para identificar los datos ficticios.
 
-
     # Abrimos el JSON en modo lectura.
     # "with" cierra el archivo automáticamente al terminar.
     with (DATA_DIR / "fx_rates.json").open(encoding="utf-8") as file:
@@ -140,10 +135,7 @@ def get_fx_reference(
     matches = []
 
     for item in rates:
-        same_currencies = (
-            item["base"] == base
-            and item["quote"] == quote
-        )
+        same_currencies = item["base"] == base and item["quote"] == quote
 
         # Si no se pide fecha, aceptamos cualquier fecha disponible.
         # Si se pide una, exigimos coincidencia exacta.
@@ -156,8 +148,7 @@ def get_fx_reference(
     # Nunca inventamos una tasa ni usamos otro par de monedas.
     if not matches:
         raise ValueError(
-            f"No hay tasa de referencia para {base}/{quote}"
-            + (f" en {date}." if date else ".")
+            f"No hay tasa de referencia para {base}/{quote}" + (f" en {date}." if date else ".")
         )
 
     # Elegimos la tasa más reciente entre las coincidencias.

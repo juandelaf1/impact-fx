@@ -4,6 +4,8 @@ Backlog priorizado para lograr un MVP **viable y completo en 4–5 h** (con prep
 Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 
 > **Actualización (post-merge backend #15/#22):** componentes base y hardening backend están en `main`; los ítems pendientes se concentran en integración FE↔BE real, benchmark integrado, despliegue y entregables finales.
+>
+> **Actualización 2026-11-13 (profesionalización):** se abre la sección [Fase P — Profesionalización y escalado](#fase-p--profesionalización-y-escalado) con el trabajo de la auditoría (operación, calidad, reproducibilidad). Detalle en [`audit-escalado.md`](audit-escalado.md).
 
 ## Must — MVP (no negociable, día D)
 | ID | Tarea | Responsable | Dependencias | Estado | Criterio de aceptación |
@@ -39,10 +41,48 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 | C3 | Few-shot ampliado en prompt | Gema | [ ] |
 | C4 | Validación automática de datos en `scripts/` | José | [ ] |
 
-## Won’t (este reto)
+## Won't (este reto)
 - Ejecución real de pagos, login/usuarios, BD persistente.
 - Scraping o tasas en tiempo real como dependencia de la demo.
 - Múltiples agentes, cobertura global en vivo, gráficos complejos.
+
+## Fase P — Profesionalización y escalado
+
+> Ítems surgidos de la [auditoría técnica](audit-escalado.md) del 2026-11-13. No forman parte del entregable del reto, pero son la diferencia entre "funciona en mi máquina" y "es operable".
+
+### P0 — Blindaje (completado)
+
+| ID | Tarea | Estado | Criterio de aceptación |
+|---|---|---|---|
+| P0.1 | Límite de tasa en `/api/chat` | [x] | `429 rate_limited` con `retry-after` implícito; configurable por entorno |
+| P0.2 | Observabilidad: `request_id`, logs JSON, sondas | [x] | `X-Request-ID` en todas las respuestas; un log JSON por petición; `/api/health`, `/api/ready`, `/api/version` |
+| P0.3 | Tests de la capa HTTP (400/422/429/502) | [x] | `tests/test_api.py`; cobertura de `api/routes.py` del 0 % al 82 % |
+| P0.4 | Dependencias reproducibles (lockfiles) | [x] | `.in` + lockfiles `pip-compile`; suite verde en venv limpio |
+| P0.5 | `pytest` operativo como estándar | [x] | `python -m pytest tests` funciona (antes fallaba la colección) |
+| P0.6 | Puertas de calidad en CI | [x] | 7 jobs: datos, lint, tipado, tests+cobertura, smoke, `pip-audit`, Docker |
+| P0.7 | Gestión de vulnerabilidades | [x] | `pip-audit` en CI + Dependabot |
+
+### P1 — Operación y resiliencia (pendiente)
+
+| ID | Tarea | Estado | Criterio de aceptación |
+|---|---|---|---|
+| P1.1 | Métricas y trazas (OpenTelemetry → Prometheus) | [ ] | Latencia p50/p95, tasa de `fallback`, llamadas al LLM por petición |
+| P1.2 | Caché de FX con TTL + *circuit breaker* | [ ] | Sin llamadas repetidas a Frankfurter; degradación limpia si el proveedor cae |
+| P1.3 | Límite de tasa compartido (Redis) | [ ] | Límite efectivo con varias réplicas; misma interfaz `RateLimiter` |
+| P1.4 | Presupuesto real del usuario (cierra `S1`) | [ ] | `context.project_budget` se aplica con reglas por prioridad y alertas por partida |
+| P1.5 | Pruebas de carga (k6/Locust) | [ ] | Objetivos de latencia y coste por petición; verificación del límite de tasa |
+| P1.6 | SBOM + escaneo de imágenes + digest de imagen base | [ ] | Artefactos de SBOM en CI; digest fijado de `python:3.11-slim` |
+| P1.7 | Versionado de API (`/api/v1`) y política de deprecación | [ ] | Contrato versionado antes de abrir a terceros |
+
+### P2 — Gobierno y documentación (pendiente)
+
+| ID | Tarea | Estado | Criterio de aceptación |
+|---|---|---|---|
+| P2.1 | `CODEOWNERS` con responsables reales | [ ] | Handles del equipo asignados por área |
+| P2.2 | `CHANGELOG` y releases con tags semánticos | [ ] | Versiones publicadas y anotadas |
+| P2.3 | Limpieza de ramas remotas obsoletas | [ ] | Solo ramas vivas en el remoto |
+| P2.4 | Índice de documentación y estados sincronizados | [ ] | Backlog y docs reflejan el estado real del código |
+| P2.5 | Tests de UI con `streamlit.testing.v1.AppTest` | [ ] | Cobertura de `frontend/app.py` y `results_panel.py` por encima del 0 % |
 
 ## Notas de gestión
 - **Prioridad absoluta:** M10 (ciclo completo) > M11 > M12 > M13. Si hay retraso, cortar en orden: C* → S* → pulido visual → (último recurso) deploy (mantener demo local).

@@ -4,7 +4,6 @@ from pathlib import Path
 
 from backend.src.services.budget_impact import calculate_budget_impact
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BUDGETS_PATH = PROJECT_ROOT / "data" / "processed" / "project_budgets.json"
 

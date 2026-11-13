@@ -1,0 +1,88 @@
+# Configuración central de herramientas de calidad (ruff, mypy, pytest, coverage).
+#
+# Este proyecto NO se publica como paquete: el fichero existe para unificar
+# la configuración de lint, tipado y tests en un único sitio.
+#
+#   ruff    -> ruff check . && ruff format --check .
+#   mypy    -> mypy backend frontend
+#   pytest  -> pytest
+#   coverage-> coverage run -m pytest && coverage report
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "scripts/resultado_b1.txt"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "W",    # warnings
+    "I",    # isort
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "RET",  # return
+    "ARG",  # unused arguments
+    "PTH",  # pathlib
+    "S",    # bandit
+    "N",    # pep8-naming
+]
+ignore = [
+    "S101",  # se usa assert en scripts de verificación
+    "E501",  # el line-length lo aplica el formateador
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E402", "S603", "S607", "T201"]
+"tests/*" = ["S101", "ARG001", "ARG002"]
+"frontend/*" = ["S"]
+"backend/src/tools/get_fx_reference.py" = ["S310"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "frontend"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "."
+explicit_package_bases = true
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_configs = true
+exclude = ["^data/", "^scripts/", "^frontend/"]
+
+[[tool.mypy.overrides]]
+module = ["groq.*", "openai.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# "tests" se añade al path para que los imports entre módulos de test
+# (`from test_orchestrator import ...`) funcionen tanto con pytest como con
+# `python -m unittest discover -s tests`.
+pythonpath = [".", "tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+branch = true
+source = ["backend", "frontend"]
+omit = [
+    "*/__pycache__/*",
+    "backend/src/agent/__init__.py",
+    "frontend/components/__init__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 60
+exclude_also = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

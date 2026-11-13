@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
-import os
+import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from backend.src.config.settings import settings
-from backend.src.services.data_loader import find_demo_scenario, load_json
+from backend.src.core.logging import get_logger
 from backend.src.services.budget_impact import calculate_budget_impact
-from backend.src.tools.get_fx_reference import get_fx_reference
+from backend.src.services.data_loader import find_demo_scenario, load_json
 from backend.src.tools.calculate_transfer_scenarios import calculate_transfer_scenarios
+from backend.src.tools.get_fx_reference import get_fx_reference
+
+logger = get_logger(__name__)
 
 AGENT_DIR = Path(__file__).resolve().parent
 SYSTEM_PROMPT_PATH = AGENT_DIR / "system_prompt.txt"
@@ -17,7 +21,7 @@ TOOL_DEFS_PATH = AGENT_DIR / "tool_definitions.json"
 
 # Solo se permite ejecutar estas funciones.
 # Nunca ejecutamos codigo arbitrario generado por el modelo.
-TOOL_FUNCTIONS = {
+TOOL_FUNCTIONS: dict[str, Callable[..., dict[str, Any]]] = {
     "get_fx_reference": get_fx_reference,
     "calculate_transfer_scenarios": calculate_transfer_scenarios,
 }
@@ -44,30 +48,32 @@ def _get_llm_client():
     Para Groq usamos el SDK nativo (probado en los scripts del equipo).
     Para el resto usamos el cliente de OpenAI, que tambien sirve con
     proveedores compatibles (base URL configurable).
+
+    Todos los clientes se configuran con timeout: una llamada al proveedor
+    nunca puede dejar el request bloqueado indefinidamente.
     """
     api_key = settings.llm_api_key
     if not api_key:
         raise RuntimeError("LLM_API_KEY no configurada en .env")
 
     provider = (settings.llm_provider or "groq").lower()
+    timeout = settings.llm_timeout_seconds
 
     if provider == "groq":
         try:
             from groq import Groq  # type: ignore
         except Exception as exc:  # pragma: no cover
-            raise RuntimeError(f"Falta la dependencia groq: {exc}")
-        return Groq(api_key=api_key)
+            raise RuntimeError(f"Falta la dependencia groq: {exc}") from exc
+        return Groq(api_key=api_key, timeout=timeout)
 
     try:
         from openai import OpenAI  # type: ignore
     except Exception as exc:  # pragma: no cover
-        raise RuntimeError(f"Falta la dependencia openai: {exc}")
+        raise RuntimeError(f"Falta la dependencia openai: {exc}") from exc
 
     if settings.llm_base_url:
-        return OpenAI(api_key=api_key, base_url=settings.llm_base_url)
-    if provider == "openai":
-        return OpenAI(api_key=api_key)
-    return OpenAI(api_key=api_key)
+        return OpenAI(api_key=api_key, base_url=settings.llm_base_url, timeout=timeout)
+    return OpenAI(api_key=api_key, timeout=timeout)
 
 
 def _call_llm(client: Any, messages: list[dict[str, Any]], tools: list[dict[str, Any]]):
@@ -76,6 +82,9 @@ def _call_llm(client: Any, messages: list[dict[str, Any]], tools: list[dict[str,
 
     Algunos modelos (p.ej. los de razonamiento) no aceptan temperature
     o max_tokens: si la llamada falla por eso, reintentamos sin ellos.
+
+    Los errores transitorios (timeout, 429, 5xx) se reintentan con backoff
+    exponencial; el resto se propaga para activar el fallback determinista.
     """
     kwargs: dict[str, Any] = {
         "model": settings.llm_model,
@@ -84,23 +93,66 @@ def _call_llm(client: Any, messages: list[dict[str, Any]], tools: list[dict[str,
         "tool_choice": "auto",
     }
 
-    try:
-        return client.chat.completions.create(**kwargs)
-    except Exception:
-        pass
+    variants: list[dict[str, Any]] = [kwargs]
+    without_tool_choice = dict(kwargs)
+    without_tool_choice.pop("tool_choice", None)
+    variants.append(without_tool_choice)
+    variants.append(
+        {
+            "model": settings.llm_model,
+            "messages": messages,
+            "tools": tools,
+        }
+    )
 
-    kwargs.pop("tool_choice", None)
-    try:
-        return client.chat.completions.create(**kwargs)
-    except Exception:
-        pass
+    attempts = max(1, settings.llm_max_retries + 1)
+    last_error: Exception | None = None
 
-    minimal = {
-        "model": settings.llm_model,
-        "messages": messages,
-        "tools": tools,
-    }
-    return client.chat.completions.create(**minimal)
+    for variant_index, variant in enumerate(variants):
+        for attempt in range(attempts):
+            try:
+                return client.chat.completions.create(**variant)
+            except Exception as exc:
+                last_error = exc
+                if not _is_transient_error(exc):
+                    # Error no transitorio (p.ej. parametro no soportado):
+                    # probamos la siguiente variante sin reintentar.
+                    logger.debug(
+                        "llm_call_variant_failed",
+                        extra={"fields": {"variant": variant_index, "error": str(exc)[:300]}},
+                    )
+                    break
+                if attempt < attempts - 1:
+                    backoff = min(2**attempt * 0.5, 8.0)
+                    logger.warning(
+                        "llm_call_retry",
+                        extra={
+                            "fields": {
+                                "attempt": attempt + 1,
+                                "backoff_s": backoff,
+                                "model": settings.llm_model,
+                                "error": str(exc)[:300],
+                            }
+                        },
+                    )
+                    time.sleep(backoff)
+                    continue
+                # Reintentos agotados: no tiene sentido probar otras variantes.
+                raise RuntimeError(
+                    f"El proveedor LLM fallo tras {attempts} intento(s): {exc}"
+                ) from exc
+
+    raise RuntimeError(f"El proveedor LLM fallo: {last_error}")
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    """Indica si un error del proveedor merece un reintento."""
+
+    status = getattr(exc, "status_code", None)
+    if isinstance(status, int):
+        return status == 429 or status >= 500
+    name = type(exc).__name__.lower()
+    return any(token in name for token in ("timeout", "connection", "ratelimit", "apistatus"))
 
 
 def _run_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -110,16 +162,31 @@ def _run_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     return function(**arguments)
 
 
-def _maybe_budget_impact(context: dict[str, Any], scenarios: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _maybe_budget_impact(
+    context: dict[str, Any], scenarios: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """Calcula el impacto presupuestario del corredor, si hay presupuesto cargado.
+
+    El presupuesto se selecciona por datos (`project_budgets.json`), no por un
+    identificador fijo en el código.
+    """
     if not scenarios or len(scenarios) < 2:
         return None
     dest = str(context.get("destination_country", "")).upper()
     currency = str(context.get("currency", "")).upper()
-    if dest != "KE" or currency != "KES":
+    if not dest or not currency:
         return None
     try:
         budgets = load_json("project_budgets.json")
-        project = next((b for b in budgets if str(b.get("project_id")) == "KE-HEALTH-001"), None)
+        project = next(
+            (
+                b
+                for b in budgets
+                if str(b.get("destination_country", "")).upper() == dest
+                and str(b.get("currency", "")).upper() == currency
+            ),
+            None,
+        )
         if not project:
             return None
         base = scenarios[0].get("amount_received")
@@ -205,7 +272,10 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
         }
         if budget_impact:
             agent["budget_impact"] = budget_impact
-            agent["assumptions"].append("Impacto presupuestario calculado con presupuesto sintético/de demostración (KE-HEALTH-001).")
+            agent["assumptions"].append(
+                "Impacto presupuestario calculado con presupuesto sintético/de demostración "
+                f"({budget_impact.get('project_id')})."
+            )
         return {"reply": reply, "agent": agent}
 
     return {
@@ -216,7 +286,8 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
         ),
         "agent": {
             "tools_used": [],
-            "reasoning_summary": "Fallback sin escenario determinista coincidente. " + fallback_note,
+            "reasoning_summary": "Fallback sin escenario determinista coincidente. "
+            + fallback_note,
             "scenarios": [],
             "difference": {},
             "assumptions": [
@@ -232,7 +303,6 @@ def _fallback_response(context: dict[str, Any], reason: str | None = None) -> di
             "is_fallback": True,
         },
     }
-
 
 
 def run_agent(
@@ -252,7 +322,16 @@ def run_agent(
             user_content += "\n\nContexto (JSON):\n" + json.dumps(context, ensure_ascii=False)
 
         messages: list[dict[str, Any]] = [{"role": "system", "content": system_prompt}]
-        for item in history:
+        # Historial acotado: evita prompts crecientes (coste/latencia) y reduce
+        # la superficie de prompt injection con historial manipulado.
+        max_history = max(0, settings.llm_max_history_messages)
+        trimmed_history = history[-max_history:] if max_history else []
+        if history and len(history) > len(trimmed_history):
+            logger.info(
+                "history_trimmed",
+                extra={"fields": {"kept": len(trimmed_history), "received": len(history)}},
+            )
+        for item in trimmed_history:
             if item.get("role") in ("user", "assistant") and item.get("content"):
                 messages.append({"role": item["role"], "content": item["content"]})
         messages.append({"role": "user", "content": user_content})
@@ -290,10 +369,14 @@ def run_agent(
                     and len(calc_result.get("scenarios", [])) >= 2
                     and isinstance(calc_result.get("difference"), dict)
                 )
-                if verified:
+                if verified and calc_result is not None and fx_reference is not None:
                     scenarios = calc_result.get("scenarios") or []
                     difference = calc_result.get("difference") or {}
-                    fx_source = "frankfurter" if str(fx_reference.get("source")) == "frankfurter" else "demo"
+                    fx_source = (
+                        "frankfurter"
+                        if str(fx_reference.get("source")) == "frankfurter"
+                        else "demo"
+                    )
                     budget_impact = _maybe_budget_impact(context, scenarios)
                     fx_meta = None
                     if isinstance(fx_reference, dict):
@@ -303,12 +386,13 @@ def run_agent(
                             "date": fx_reference.get("date"),
                             "is_mock": fx_reference.get("is_mock"),
                         }
-                    meta = {
+                    meta: dict[str, Any] = {
                         "tools_used": tools_used,
                         "reasoning_summary": "Simulación completada con herramientas verificadas y parámetros financieros controlados por backend.",
                         "scenarios": scenarios,
                         "difference": difference,
-                        "assumptions": assumptions or ["Verificar los supuestos citados en el texto de la respuesta."],
+                        "assumptions": assumptions
+                        or ["Verificar los supuestos citados en el texto de la respuesta."],
                         "alerts": [],
                         "execution_mode": "llm_tools",
                         "degraded": False,
@@ -319,7 +403,11 @@ def run_agent(
                     }
                     if budget_impact:
                         meta["budget_impact"] = budget_impact
-                        meta["assumptions"].append("Impacto presupuestario calculado con presupuesto sintético/de demostración (KE-HEALTH-001). No se asigna el déficit a partidas concretas.")
+                        assumptions_list: list[str] = meta["assumptions"]
+                        assumptions_list.append(
+                            "Impacto presupuestario calculado con presupuesto sintético/de demostración "
+                            f"({budget_impact.get('project_id')}). No se asigna el déficit a partidas concretas."
+                        )
                     return {"reply": reply, "agent": meta}
 
                 # Sin simulación determinista verificada: no exponer escenarios no respaldados
@@ -336,18 +424,29 @@ def run_agent(
                     "reasoning_summary": "No se completó una simulación financiera verificada por herramientas.",
                     "scenarios": [],
                     "difference": {},
-                    "assumptions": assumptions or ["No hay resultados deterministas verificados disponibles."],
-                    "alerts": ["No hay escenarios respaldados por cálculo determinista verificado en esta respuesta."],
+                    "assumptions": list(
+                        assumptions or ["No hay resultados deterministas verificados disponibles."]
+                    ),
+                    "alerts": [
+                        "No hay escenarios respaldados por cálculo determinista verificado en esta respuesta."
+                    ],
                     "execution_mode": "llm_tools",
                     "degraded": True,
-                    "fx_source": ("frankfurter" if fx_reference and str(fx_reference.get("source")) == "frankfurter" else "demo"),
+                    "fx_source": (
+                        "frankfurter"
+                        if fx_reference and str(fx_reference.get("source")) == "frankfurter"
+                        else "demo"
+                    ),
                     "calculation_source": "none",
                     "fx_reference": fx_meta,
                     "is_fallback": False,
                 }
                 # Si el contexto permite simulación determinista, preferir fallback honesto
                 if trusted_amount is not None and trusted_currency and trusted_fee is not None:
-                    fb = _fallback_response(context, reason="No se obtuvo simulación verificada (FX + cálculo) en el flujo LLM.")
+                    fb = _fallback_response(
+                        context,
+                        reason="No se obtuvo simulación verificada (FX + cálculo) en el flujo LLM.",
+                    )
                     # conservar trazas útiles si existen
                     if assumptions:
                         fb_agent = fb.get("agent", {})
@@ -384,7 +483,9 @@ def run_agent(
                 # Binding/validaci?n de argumentos desde fuentes confiables
                 if name == "get_fx_reference":
                     if not trusted_base or not trusted_quote or len(trusted_quote) != 3:
-                        result = {"error": "Corredor/moneda no disponible o inv?lido en contexto validado."}
+                        result = {
+                            "error": "Corredor/moneda no disponible o inv?lido en contexto validado."
+                        }
                     else:
                         safe_args = {"base": trusted_base, "quote": trusted_quote}
                         try:
@@ -393,11 +494,15 @@ def run_agent(
                             result = {"error": str(exc)}
                 elif name == "calculate_transfer_scenarios":
                     if fx_reference is None or fx_reference.get("rate") is None:
-                        result = {"error": "No hay tasa de referencia verificada. Ejecuta get_fx_reference primero."}
+                        result = {
+                            "error": "No hay tasa de referencia verificada. Ejecuta get_fx_reference primero."
+                        }
                     elif trusted_amount is None or trusted_fee is None or not trusted_currency:
-                        result = {"error": "Faltan par?metros financieros confiables en el contexto."}
+                        result = {
+                            "error": "Faltan par?metros financieros confiables en el contexto."
+                        }
                     else:
-                        safe_args = {
+                        calc_args: dict[str, Any] = {
                             "amount_eur": float(trusted_amount),
                             "rate": float(fx_reference["rate"]),
                             "fee_eur": float(trusted_fee),
@@ -405,27 +510,32 @@ def run_agent(
                             "currency": trusted_currency,
                         }
                         try:
-                            result = _run_tool(name, safe_args)
+                            result = _run_tool(name, calc_args)
                         except Exception as exc:
                             result = {"error": str(exc)}
                 else:
                     result = {"error": f"Tool no soportada: {name}"}
 
                 # Registrar tool_used solo si ejecuci?n exitosa (sin error)
-                if isinstance(result, dict) and not result.get("error"):
-                    if name not in tools_used:
-                        tools_used.append(name)
+                if isinstance(result, dict) and not result.get("error") and name not in tools_used:
+                    tools_used.append(name)
 
                 if name == "calculate_transfer_scenarios" and isinstance(result, dict):
                     if not result.get("error") and "scenarios" in result and "difference" in result:
                         calc_result = result
-                        scenarios = result.get("scenarios") or []
-                        difference = result.get("difference") or {}
+                        raw_scenarios = result.get("scenarios")
+                        raw_difference = result.get("difference")
+                        scenarios = list(raw_scenarios) if isinstance(raw_scenarios, list) else []
+                        difference = (
+                            dict(raw_difference) if isinstance(raw_difference, dict) else {}
+                        )
                     elif result.get("error"):
                         calc_result = None
                         scenarios = []
                         difference = {}
-                        assumptions.append(f"La herramienta {name} devolvi? un error: {result['error']}")
+                        assumptions.append(
+                            f"La herramienta {name} devolvi? un error: {result['error']}"
+                        )
 
                 if name == "get_fx_reference" and isinstance(result, dict):
                     if result.get("rate") is not None and not result.get("error"):
@@ -440,7 +550,9 @@ def run_agent(
                         )
                     elif result.get("error"):
                         fx_reference = None
-                        assumptions.append(f"La herramienta {name} devolvió un error: {result['error']}")
+                        assumptions.append(
+                            f"La herramienta {name} devolvió un error: {result['error']}"
+                        )
 
                 messages.append(
                     {

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.src.core.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 def calculate_budget_impact(
     base_amount_received: float,
@@ -17,7 +21,11 @@ def calculate_budget_impact(
     for item in items:
         try:
             total += float(item.get("amount_local", 0) or 0)
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "budget_item_invalido",
+                extra={"fields": {"item": str(item)[:120], "error": str(exc)[:120]}},
+            )
             continue
 
     base_received = float(base_amount_received or 0)

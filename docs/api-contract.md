@@ -1,6 +1,8 @@
 # Contrato API — Impact FX
 
 > **Estado:** congelado para el MVP. Cambios solo con acuerdo del equipo (D-007). Fuente compartida: [`../shared/contracts/contracts.md`](../shared/contracts/contracts.md).
+>
+> **Extensiones aditivas (v0.2, 2026-11-13):** el contrato base (`200/400/422/502`) se mantiene **sin cambios**. La auditoría de escalado ([`audit-escalado.md`](audit-escalado.md)) añadió superficies que no rompen compatibilidad: `429 rate_limited`, `GET /api/ready`, `GET /api/version` y la cabecera de correlación `X-Request-ID`. Detalle en [Extensiones aditivas](#extensiones-aditivas-v02).
 
 Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend (Streamlit) usa `API_BASE_URL` para consumir la API.
 
@@ -13,9 +15,14 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 { "status": "ok" }
 ```
 
+### 1.b) Readiness y versión (aditivo v0.2)
+- **GET** `/api/ready` → `{ "status": "ready"|"degraded", "checks": { ... }, "version": "0.2.0" }`
+- **GET** `/api/version` → `{ "name": "...", "version": "...", "environment": "..." }`
+
 ### 2) Chat / Simulación (agente)
 - **POST** `/api/chat`
 - **Headers:** `Content-Type: application/json`
+- **Headers de respuesta:** `X-Request-ID` (correlación con los logs del backend)
 
 #### Request body
 ```json
@@ -92,6 +99,26 @@ Base URL (local): `http://localhost:3001` (configurable por `PORT`). El frontend
 - Si `is_mock=true` o la tasa es de demo, debe comunicarse como ficticia/referencia; una tasa de Frankfurter es referencia externa, **no** cotizaci?n firme ni precio ejecutable.
 
 Formato: `{ "error": "string", "code": "STRING", "details": "string" }`
+
+## Extensiones aditivas (v0.2)
+
+Cambios incorporados en la profesionalización (2026-11-13). **No rompen** el contrato anterior: los clientes existentes siguen recibiendo `200/400/422/502` con la misma forma de cuerpo.
+
+| Superficie | Comportamiento | Compatibilidad |
+|---|---|---|
+| `429 rate_limited` / `TOO_MANY_REQUESTS` | `/api/chat` superado el límite por cliente (`RATE_LIMIT_REQUESTS` / `RATE_LIMIT_WINDOW_SECONDS`). Cuerpo `{error, code, details}` con el número de segundos de espera. | Aditivo: antes devolvía `200` o `502`. El frontend lo muestra como mensaje accionable. |
+| `400` por `history` excesivo | `history` con más de `MAX_HISTORY_MESSAGES` (20 por defecto) elementos → `invalid_input` / `BAD_REQUEST`. | Aditivo: antes se aceptaba sin límite (riesgo de coste y de prompt). |
+| `X-Request-ID` | Toda respuesta lleva esta cabecera; se propaga desde la petición entrante si existe. | Aditivo: cabecera nueva, no afecta al cuerpo. |
+| `GET /api/ready` | Sonda de readiness: comprueba que los datos críticos son cargables y expone `fx_source` y si hay LLM configurado. | Endpoint nuevo. |
+| `GET /api/version` | Versión y entorno del servicio. | Endpoint nuevo. |
+| `alerts` con el presupuesto del usuario | Si llega `context.project_budget`, la respuesta incluye un aviso de que el MVP todavía no lo aplica (usa el presupuesto sintético del corredor). | Aditivo: `alerts` ya formaba parte del contrato. |
+| Matriz de corredores desde datos | El corredor soportado se lee de `data/processed/corridors.json` en lugar de estar fijado en el código. | Sin cambio de comportamiento: en el MVP sigue siendo `EUR→KES (KE)`. |
+
+### Reglas de observabilidad
+
+- El backend emite **un log JSON por petición** con `request_id`, método, ruta, estado y duración.
+- Los errores del agente se registran con el mismo `request_id` (el cuerpo público sigue sanitizado).
+- `GET /api/health` es *liveness* (el proceso responde); `GET /api/ready` es *readiness* (las dependencias están disponibles). Los orquestadores deben usar la segunda para decidir tráfico.
 
 ## Notas de integración
 - Frontend debe mostrar `reply` y, de forma estructurada, escenarios/diferencia/supuestos/`tools_used`/`alerts` y metadatos de ejecución (`execution_mode`, `degraded`, `fx_source`, `calculation_source`) sin exponer JSON crudo de tools.

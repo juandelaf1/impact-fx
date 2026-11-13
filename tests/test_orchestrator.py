@@ -149,7 +149,9 @@ class TestOrchestrator(unittest.TestCase):
                 return {"error": "fx unavailable"}
             return {"scenarios": [], "difference": {}}
 
-        client = FakeClient([_tool_call("call_1", "get_fx_reference", {"base": "EUR", "quote": "KES"})], "Fin")
+        client = FakeClient(
+            [_tool_call("call_1", "get_fx_reference", {"base": "EUR", "quote": "KES"})], "Fin"
+        )
         context = {
             "amount_eur": 10000,
             "destination_country": "KE",
@@ -157,8 +159,10 @@ class TestOrchestrator(unittest.TestCase):
             "fee_eur": 40,
             "scenario_drop_pct": 3,
         }
-        with patch.object(orchestrator, "_get_llm_client", return_value=client), \
-             patch.object(orchestrator, "_run_tool", side_effect=fake_run_tool):
+        with (
+            patch.object(orchestrator, "_get_llm_client", return_value=client),
+            patch.object(orchestrator, "_run_tool", side_effect=fake_run_tool),
+        ):
             result = orchestrator.run_agent("Simula", context)
 
         agent = result["agent"]
@@ -177,8 +181,10 @@ class TestOrchestrator(unittest.TestCase):
             "fee_eur": 40,
             "scenario_drop_pct": 3,
         }
-        with patch.object(orchestrator, "_get_llm_client", return_value=client), \
-             patch.object(orchestrator, "MAX_ROUNDS", 1):
+        with (
+            patch.object(orchestrator, "_get_llm_client", return_value=client),
+            patch.object(orchestrator, "MAX_ROUNDS", 1),
+        ):
             result = orchestrator.run_agent("Simula", context)
 
         agent = result["agent"]
@@ -189,9 +195,7 @@ class TestOrchestrator(unittest.TestCase):
         self.assertEqual(agent["difference"]["amount"], 43326)
 
     def test_fallback_when_llm_unavailable(self):
-        with patch.object(
-            orchestrator, "_get_llm_client", side_effect=RuntimeError("sin clave")
-        ):
+        with patch.object(orchestrator, "_get_llm_client", side_effect=RuntimeError("sin clave")):
             result = orchestrator.run_agent(
                 "Quiero enviar 10000 EUR a Kenia",
                 {
@@ -210,7 +214,7 @@ class TestOrchestrator(unittest.TestCase):
         self.assertIn("fallback", agent["reasoning_summary"].lower())
         self.assertEqual(agent["scenarios"][0]["amount_received"], 1444200)
         self.assertEqual(agent["scenarios"][1]["amount_received"], 1400874)
-        self.assertEqual(agent["difference"]["amount"], 43326)
+        self.assertEqual(agent["difference"]["amount"], 43326)
 
 
 if __name__ == "__main__":

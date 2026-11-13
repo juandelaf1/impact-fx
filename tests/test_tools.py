@@ -4,11 +4,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backend.src.tools.get_fx_reference import get_fx_reference
 from backend.src.tools.calculate_transfer_scenarios import (
     calculate_transfer_scenarios,
 )
-
+from backend.src.tools.get_fx_reference import get_fx_reference
 
 # Localizamos los datos esperados desde la carpeta de este archivo.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -53,18 +52,10 @@ class TestTools(unittest.TestCase):
                     currency=inputs["quote"],
                 )
 
-                self.assertEqual(
-                    reference["rate"], expected["reference_rate"]
-                )
-                self.assertEqual(
-                    result["net_amount_eur"], expected["net_amount_eur"]
-                )
-                self.assertEqual(
-                    result["scenarios"], expected["scenarios"]
-                )
-                self.assertEqual(
-                    result["difference"], expected["difference"]
-                )
+                self.assertEqual(reference["rate"], expected["reference_rate"])
+                self.assertEqual(result["net_amount_eur"], expected["net_amount_eur"])
+                self.assertEqual(result["scenarios"], expected["scenarios"])
+                self.assertEqual(result["difference"], expected["difference"])
 
     def test_reference_metadata(self):
         # La herramienta debe conservar los datos de procedencia.
@@ -86,9 +77,7 @@ class TestTools(unittest.TestCase):
     def test_fee_exceeds_amount(self):
         # La comisión no puede superar el dinero enviado.
         with self.assertRaises(ValueError):
-            calculate_transfer_scenarios(
-                100, 145, 150, [-3], currency="KES"
-            )
+            calculate_transfer_scenarios(100, 145, 150, [-3], currency="KES")
 
 
 if __name__ == "__main__":
