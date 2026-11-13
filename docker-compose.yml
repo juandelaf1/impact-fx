@@ -5,21 +5,49 @@ services:
       dockerfile: Dockerfile.backend
     container_name: impact-fx-backend
     environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
       PORT: "3001"
       FX_SOURCE: ${FX_SOURCE:-demo}
       LLM_PROVIDER: ${LLM_PROVIDER:-groq}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-openai/gpt-oss-20b}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-25}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-1}
+      LLM_MAX_HISTORY_MESSAGES: ${LLM_MAX_HISTORY_MESSAGES:-12}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8501,http://127.0.0.1:8501}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_REQUESTS: ${RATE_LIMIT_REQUESTS:-30}
+      RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
+      MAX_HISTORY_MESSAGES: ${MAX_HISTORY_MESSAGES:-20}
+    command: >
+      uvicorn backend.src.main:app
+      --host 0.0.0.0
+      --port 3001
+      --workers ${UVICORN_WORKERS:-2}
+      --proxy-headers
+      --forwarded-allow-ips "*"
     ports:
       - "127.0.0.1:3001:3001"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/api/health', timeout=3).read()"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -27,9 +55,28 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: impact-fx-frontend
     environment:
+      APP_ENV: ${APP_ENV:-development}
       API_BASE_URL: http://backend:3001
+      API_TIMEOUT: ${API_TIMEOUT:-60}
     ports:
       - "127.0.0.1:8501:8501"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3).read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     depends_on:
       backend:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

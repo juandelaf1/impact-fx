@@ -66,9 +66,7 @@ def main() -> None:
     }
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/api/chat", json=payload, timeout=TIMEOUT
-        )
+        response = requests.post(f"{BASE_URL}/api/chat", json=payload, timeout=TIMEOUT)
     except requests.exceptions.RequestError as exc:
         fail(f"Fallo la llamada a /api/chat: {exc}")
 
@@ -84,9 +82,7 @@ def main() -> None:
         fail(f"Se esperaban 2 escenarios, se recibieron {len(scenarios)}")
 
     base = next((s for s in scenarios if s.get("name") == "base"), None)
-    stress = next(
-        (s for s in scenarios if str(s.get("name", "")).startswith("stress")), None
-    )
+    stress = next((s for s in scenarios if str(s.get("name", "")).startswith("stress")), None)
 
     if not base or not stress:
         fail(f"Escenarios con nombres inesperados: {[s.get('name') for s in scenarios]}")
@@ -95,14 +91,10 @@ def main() -> None:
         fail(f"Escenario base incorrecto: {base['amount_received']} != {EXPECTED_BASE}")
 
     if round(stress["amount_received"]) != EXPECTED_STRESS:
-        fail(
-            f"Escenario de estres incorrecto: {stress['amount_received']} != {EXPECTED_STRESS}"
-        )
+        fail(f"Escenario de estres incorrecto: {stress['amount_received']} != {EXPECTED_STRESS}")
 
     if round(difference.get("amount", -1)) != EXPECTED_DIFFERENCE:
-        fail(
-            f"Diferencia incorrecta: {difference.get('amount')} != {EXPECTED_DIFFERENCE}"
-        )
+        fail(f"Diferencia incorrecta: {difference.get('amount')} != {EXPECTED_DIFFERENCE}")
 
     if not data.get("reply"):
         fail("La respuesta no incluye 'reply'")
@@ -117,9 +109,7 @@ def main() -> None:
     # 3. Validacion de entrada
     bad_payload = dict(payload)
     bad_payload["message"] = ""
-    response = requests.post(
-        f"{BASE_URL}/api/chat", json=bad_payload, timeout=TIMEOUT
-    )
+    response = requests.post(f"{BASE_URL}/api/chat", json=bad_payload, timeout=TIMEOUT)
     if response.status_code != 400:
         fail(f"Se esperaba 400 con mensaje vacio, se recibio {response.status_code}")
     print("[OK ] POST /api/chat con message vacio -> 400")

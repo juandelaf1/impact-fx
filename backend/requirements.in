@@ -1,0 +1,9 @@
+# Dependencias de runtime del backend (rangos declarados).
+# NO editar el .txt: se genera con `pip-compile backend/requirements.in -o backend/requirements.txt`.
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.1
+pydantic>=2.7.0
+groq>=0.11.0
+openai>=1.40.0
+requests>=2.32.0

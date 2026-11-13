@@ -1,20 +1,15 @@
-import streamlit as st
 from pathlib import Path
 
-from services.api import send_chat_message, check_api_health, APIError
-from services.demo_data import get_demo_response
+import streamlit as st
 from components.results_panel import render_results
-
+from services.api import APIError, check_api_health, send_chat_message
+from services.demo_data import get_demo_response
 
 # --------------------------------------------------
 # CONFIGURACIÓN DE LA PÁGINA
 # --------------------------------------------------
 
-st.set_page_config(
-    page_title="Impact FX",
-    page_icon="🌍",
-    layout="wide"
-)
+st.set_page_config(page_title="Impact FX", page_icon="🌍", layout="wide")
 
 
 # --------------------------------------------------
@@ -24,11 +19,7 @@ st.set_page_config(
 CSS_PATH = Path(__file__).parent / "styles" / "custom.css"
 
 if CSS_PATH.exists():
-    with open(CSS_PATH, encoding="utf-8") as css_file:
-        st.markdown(
-            f"<style>{css_file.read()}</style>",
-            unsafe_allow_html=True
-        )
+    st.markdown(f"<style>{CSS_PATH.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 
 # --------------------------------------------------
@@ -46,7 +37,7 @@ st.markdown(
         </p>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 
@@ -64,43 +55,25 @@ st.write(
 st.markdown("### Datos de la transferencia")
 
 with st.form("transfer_form"):
-
     col1, col2 = st.columns(2)
 
     with col1:
         amount_eur = st.number_input(
-            "Importe de la transferencia (€)",
-            min_value=1.0,
-            value=10000.0,
-            step=500.0
+            "Importe de la transferencia (€)", min_value=1.0, value=10000.0, step=500.0
         )
 
-        destination = st.selectbox(
-            "País de destino",
-            options=["Kenya"]
-        )
+        destination = st.selectbox("País de destino", options=["Kenya"])
 
     with col2:
         fee_eur = st.number_input(
-            "Comisión de transferencia (€)",
-            min_value=0.0,
-            value=40.0,
-            step=5.0
+            "Comisión de transferencia (€)", min_value=0.0, value=40.0, step=5.0
         )
 
         scenario_drop_pct = st.slider(
-            "Caída del tipo de cambio (%)",
-            min_value=0.0,
-            max_value=20.0,
-            value=3.0,
-            step=0.5
+            "Caída del tipo de cambio (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.5
         )
 
-    submitted = st.form_submit_button(
-        "Calcular impacto",
-        use_container_width=True,
-        type="primary"
-    )
+    submitted = st.form_submit_button("Calcular impacto", use_container_width=True, type="primary")
 
 
 # --------------------------------------------------
@@ -115,13 +88,12 @@ if submitted and fee_eur >= amount_eur:
     st.error("La comisión debe ser inferior al importe de la transferencia.")
 
 if submitted and fee_eur < amount_eur:
-
     context = {
         "amount_eur": amount_eur,
         "destination_country": "KE",
         "currency": "KES",
         "fee_eur": fee_eur,
-        "scenario_drop_pct": scenario_drop_pct
+        "scenario_drop_pct": scenario_drop_pct,
     }
 
     # El mensaje interno para el agente se mantiene en inglés.
@@ -131,14 +103,9 @@ if submitted and fee_eur < amount_eur:
     )
 
     with st.spinner("Analizando tu transferencia..."):
-
         if check_api_health():
-
             try:
-                response_data = send_chat_message(
-                    message=message,
-                    context=context
-                )
+                response_data = send_chat_message(message=message, context=context)
 
                 st.session_state["results"] = response_data
                 st.session_state["demo_mode"] = False
@@ -149,15 +116,11 @@ if submitted and fee_eur < amount_eur:
                 st.session_state.pop("results", None)
                 st.session_state.pop("demo_mode", None)
                 st.session_state["connection_error"] = str(error)
-                st.session_state["connection_error_status"] = getattr(
-                    error, "status_code", None
-                )
+                st.session_state["connection_error_status"] = getattr(error, "status_code", None)
 
         else:
             st.session_state["results"] = get_demo_response(
-                amount_eur=amount_eur,
-                fee_eur=fee_eur,
-                scenario_drop_pct=scenario_drop_pct
+                amount_eur=amount_eur, fee_eur=fee_eur, scenario_drop_pct=scenario_drop_pct
             )
 
             st.session_state["demo_mode"] = True
@@ -188,10 +151,7 @@ if st.session_state.get("connection_error"):
         st.error(f"No se ha podido procesar la transferencia: {msg}")
 
 if st.session_state.get("results"):
-    render_results(
-        st.session_state["results"],
-        demo_mode=st.session_state.get("demo_mode", False)
-    )
+    render_results(st.session_state["results"], demo_mode=st.session_state.get("demo_mode", False))
 
 
 # --------------------------------------------------

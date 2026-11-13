@@ -1,41 +1,53 @@
 from __future__ import annotations
 
-from typing import Any, Optional
-import logging
+from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
 from backend.src.agent.orchestrator import run_agent
-from backend.src.services.data_loader import default_fee_for_currency
+from backend.src.config.settings import settings
+from backend.src.core.logging import get_logger
+from backend.src.core.rate_limit import RateLimiter
+from backend.src.services.data_loader import (
+    default_fee_for_currency,
+    find_corridor,
+    load_json,
+    supported_corridors,
+)
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api")
 
-# MVP: corredor principal soportado para simulación verificada
-MVP_DESTINATION_COUNTRY = "KE"
-MVP_CURRENCY = "KES"
+# Límites de negocio del MVP (contrato congelado, ver docs/api-contract.md).
 MAX_AMOUNT_EUR = 10_000_000
 MAX_FEE_EUR = 1_000_000
 MAX_DROP_PCT = 100
 MAX_MESSAGE_LEN = 2000
 MAX_BUDGET_ITEMS = 50
 
+# Límite de tasa del endpoint de simulación (configurable por entorno).
+# Protege el consumo de créditos del proveedor LLM.
+rate_limiter = RateLimiter(
+    limit=settings.rate_limit_requests,
+    window_seconds=settings.rate_limit_window_seconds,
+)
+
 
 class BudgetItem(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     amount_local: float = Field(..., gt=0, le=10_000_000_000)
-    priority: Optional[str] = Field(default=None, max_length=40)
+    priority: str | None = Field(default=None, max_length=40)
 
 
 class ChatContext(BaseModel):
     amount_eur: float = Field(..., gt=0, le=MAX_AMOUNT_EUR)
     destination_country: str = Field(..., min_length=2, max_length=2)
     currency: str = Field(..., min_length=3, max_length=3)
-    fee_eur: Optional[float] = Field(default=None, ge=0, le=MAX_FEE_EUR)
+    fee_eur: float | None = Field(default=None, ge=0, le=MAX_FEE_EUR)
     scenario_drop_pct: float = Field(default=3, ge=0, lt=MAX_DROP_PCT)
-    project_budget: Optional[list[BudgetItem]] = None
+    project_budget: list[BudgetItem] | None = None
 
     @field_validator("destination_country", "currency", mode="before")
     @classmethod
@@ -46,44 +58,137 @@ class ChatContext(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., max_length=MAX_MESSAGE_LEN)
     context: ChatContext
-    history: Optional[list[dict[str, Any]]] = None
+    history: list[dict[str, Any]] | None = None
 
 
 @router.get("/health")
 def health():
+    """Sonda de liveness: el proceso responde."""
+
     return {"status": "ok"}
 
 
+@router.get("/ready")
+def ready():
+    """Sonda de readiness: dependencias críticas disponibles.
+
+    No llama al LLM (coste/latencia): comprueba que los datos y las reglas
+    de negocio que el backend necesita están cargables.
+    """
+
+    checks: dict[str, Any] = {}
+    ready_state = True
+
+    for name in ("fx_rates.json", "fee_rules.json", "corridors.json"):
+        try:
+            load_json(name)
+            checks[name] = "ok"
+        except Exception as exc:  # pragma: no cover - defensivo
+            checks[name] = f"error: {exc}"
+            ready_state = False
+
+    checks["llm_configured"] = bool(settings.llm_api_key)
+    checks["fx_source"] = settings.fx_source
+
+    return {
+        "status": "ready" if ready_state else "degraded",
+        "checks": checks,
+        "version": settings.app_version,
+    }
+
+
+@router.get("/version")
+def version():
+    """Versión del servicio (para despliegues y diagnóstico)."""
+
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "environment": settings.app_env,
+    }
+
+
 def _http_error(status: int, error: str, code: str, details: str) -> HTTPException:
-    return HTTPException(status_code=status, detail={"error": error, "code": code, "details": details})
+    return HTTPException(
+        status_code=status, detail={"error": error, "code": code, "details": details}
+    )
+
+
+def _client_key(request: Request) -> str:
+    """Clave de agrupación para el limitador de tasa (IP o proxy conocido)."""
+
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 @router.post("/chat")
-def chat(req: ChatRequest):
+def chat(req: ChatRequest, request: Request):
+    # 1) Límite de tasa: protege el consumo de créditos del proveedor LLM.
+    if settings.rate_limit_enabled:
+        rate_result = rate_limiter.check(_client_key(request))
+        if not rate_result.allowed:
+            logger.warning(
+                "rate_limited",
+                extra={
+                    "request_id": getattr(request.state, "request_id", None),
+                    "fields": {"client": _client_key(request), "path": request.url.path},
+                },
+            )
+            raise _http_error(
+                429,
+                "rate_limited",
+                "TOO_MANY_REQUESTS",
+                f"Demasiadas peticiones. Inténtalo de nuevo en {rate_result.retry_after} s.",
+            )
+
     if not req.message or not req.message.strip():
         raise _http_error(400, "invalid_input", "BAD_REQUEST", "message es requerido")
+
+    history = req.history or []
+    if len(history) > settings.max_history_messages:
+        raise _http_error(
+            400,
+            "invalid_input",
+            "BAD_REQUEST",
+            f"history excede el límite permitido ({settings.max_history_messages} mensajes).",
+        )
 
     ctx = req.context.model_dump()
     ctx["currency"] = str(ctx.get("currency", "")).upper().strip()
     ctx["destination_country"] = str(ctx.get("destination_country", "")).upper().strip()
 
-    # Validación de corredor MVP: KE debe corresponder a KES (EUR→KES)
-    dest = ctx.get("destination_country")
-    curr = ctx.get("currency")
-    if dest != MVP_DESTINATION_COUNTRY or curr != MVP_CURRENCY:
+    # Validación de corredor MVP: la matriz de cobertura vive en los datos.
+    corridor = find_corridor(
+        str(ctx.get("destination_country") or ""),
+        str(ctx.get("currency") or ""),
+    )
+    if corridor is None:
+        available = ", ".join(
+            f"{c.get('origin')}→{c.get('currency')} ({c.get('destination_country')})"
+            for c in supported_corridors()
+        )
         raise _http_error(
             400,
             "invalid_input",
             "BAD_REQUEST",
-            "Corredor no soportado en el MVP. Usa destino KE y moneda KES (EUR→KES).",
+            f"Corredor no soportado en el MVP. Corredores disponibles: {available or 'ninguno'}.",
         )
 
     # Límites razonables adicionales
     if ctx.get("fee_eur") is not None and float(ctx["fee_eur"]) > float(ctx["amount_eur"]):
-        raise _http_error(400, "invalid_input", "BAD_REQUEST", "La comisión no puede ser mayor que el importe enviado.")
+        raise _http_error(
+            400,
+            "invalid_input",
+            "BAD_REQUEST",
+            "La comisión no puede ser mayor que el importe enviado.",
+        )
     project_budget = ctx.get("project_budget") or []
     if len(project_budget) > MAX_BUDGET_ITEMS:
-        raise _http_error(400, "invalid_input", "BAD_REQUEST", "project_budget excede el límite permitido.")
+        raise _http_error(
+            400, "invalid_input", "BAD_REQUEST", "project_budget excede el límite permitido."
+        )
 
     # Aplicar fee por defecto si falta (según fee_rules.json)
     if ctx.get("fee_eur") is None:
@@ -109,10 +214,11 @@ def chat(req: ChatRequest):
         )
 
     try:
-        result = run_agent(req.message, ctx, req.history or [])
+        result = run_agent(req.message, ctx, history)
         if "reply" not in result:
             result["reply"] = ""
-        if "agent" not in result or not isinstance(result.get("agent"), dict):
+        agent = result.get("agent")
+        if not isinstance(agent, dict):
             result["agent"] = {
                 "tools_used": [],
                 "scenarios": [],
@@ -125,12 +231,29 @@ def chat(req: ChatRequest):
                 "fx_source": "demo",
                 "calculation_source": "demo_scenarios",
             }
+        else:
+            # Honestidad: si el usuario envía un presupuesto, el MVP todavía
+            # no lo aplica (usa el presupuesto demo del corredor). Se avisa.
+            if project_budget:
+                alerts = agent.setdefault("alerts", [])
+                note = (
+                    "El presupuesto enviado por el usuario no se aplica todavía en el MVP: "
+                    "el impacto presupuestario mostrado usa el presupuesto sintético del corredor."
+                )
+                if note not in alerts:
+                    alerts.append(note)
         return result
-    except Exception:
-        logger.exception("Error interno en /api/chat")
+    except Exception as exc:
+        logger.exception(
+            "Error interno en /api/chat",
+            extra={
+                "request_id": getattr(request.state, "request_id", None),
+                "fields": {"path": request.url.path},
+            },
+        )
         raise _http_error(
             502,
             "upstream_failure",
             "LLM_OR_TOOL_ERROR",
             "No se pudo completar la solicitud en este momento. Inténtalo de nuevo más tarde.",
-        )
+        ) from exc

@@ -1,7 +1,5 @@
 def get_demo_response(
-    amount_eur: float = 10000,
-    fee_eur: float = 40,
-    scenario_drop_pct: float = 3
+    amount_eur: float = 10000, fee_eur: float = 40, scenario_drop_pct: float = 3
 ) -> dict:
     """
     Genera resultados ficticios para probar la interfaz
@@ -29,7 +27,9 @@ def get_demo_response(
         "budget_total": budget_total,
         "base_amount_received": base_received,
         "stress_amount_received": stress_received,
-        "base_coverage_pct": 100.0 if base_received >= budget_total else round((base_received / budget_total) * 100, 2),
+        "base_coverage_pct": 100.0
+        if base_received >= budget_total
+        else round((base_received / budget_total) * 100, 2),
         "stress_coverage_pct": stress_cov,
         "budget_gap": budget_gap,
         "budget_status": "covered" if stress_received >= budget_total else "partial",
@@ -54,27 +54,24 @@ def get_demo_response(
                     "rate": base_rate,
                     "fee_eur": fee_eur,
                     "amount_received": base_received,
-                    "currency": "KES"
+                    "currency": "KES",
                 },
                 {
                     "name": f"stress_-{scenario_drop_pct}%",
                     "rate": stress_rate,
                     "fee_eur": fee_eur,
                     "amount_received": stress_received,
-                    "currency": "KES"
-                }
+                    "currency": "KES",
+                },
             ],
-            "difference": {
-                "amount": difference,
-                "currency": "KES"
-            },
+            "difference": {"amount": difference, "currency": "KES"},
             "budget_impact": budget_impact,
             "assumptions": [
                 "Fictional demo reference exchange rate: 145 KES/EUR (preview only).",
                 f"Transfer fee: {fee_eur} EUR.",
                 f"Stress scenario: {scenario_drop_pct}% exchange rate decrease.",
                 "Budget impact shown for synthetic demo project KE-HEALTH-001 (not attributed to specific budget items).",
-                "Estimated simulation only; no payment is executed."
+                "Estimated simulation only; no payment is executed.",
             ],
             "alerts": [
                 "Local demo preview (frontend): not an AI+tools execution or verified backend result."
@@ -82,6 +79,6 @@ def get_demo_response(
             "execution_mode": "frontend_demo",
             "degraded": True,
             "fx_source": "demo",
-            "calculation_source": "frontend_preview"
-        }
-    }
+            "calculation_source": "frontend_preview",
+        },
+    }

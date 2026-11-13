@@ -8,56 +8,50 @@
 
 <p align="center">
   <a href="https://github.com/juandelaf1/impact-fx/actions/workflows/ci.yml"><img src="https://github.com/juandelaf1/impact-fx/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Python-3.10%2B%20%7C%203.11-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Python-3.11%2B%20%7C%203.13-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit" />
   <img src="https://img.shields.io/badge/LLM-Tool%20Calling%20(Groq%20%7C%20OpenAI--compatible)-412991?logo=openai&logoColor=white" alt="LLM Tool Calling" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" />
   <img src="https://img.shields.io/badge/Node.js-18%2B%20(data%20validation)-339933?logo=nodedotjs&logoColor=white" alt="Node.js" />
-  <img src="https://img.shields.io/badge/Tests-26%20passing-success" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-46%20passing%20%7C%20coverage%2064%25-success" alt="Tests y cobertura" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License MIT" /></a>
-  <img src="https://img.shields.io/badge/Status-MVP%20demo-orange" alt="Status MVP" />
+  <img src="https://img.shields.io/badge/Status-MVP%20operativo-orange" alt="Status MVP" />
   <img src="https://img.shields.io/badge/ODS-9%20%7C%2010%20%7C%2017-0a7ea4" alt="ODS 9,10,17" />
 </p>
 
 ---
 
-## Visión general
+## 1. Visión general
 
-**Impact FX** es un MVP desarrollado para el reto **Ebury + Fundación Somos F5 (Grupo 1)**. Su objetivo es ayudar a ONG y equipos de proyectos sociales a **anticipar el importe neto recibido en moneda local** ante variaciones de tipo de cambio y comisiones, reduciendo incertidumbre en la planificación y comunicación con socios locales.
-
-- **Producto:** simulación clara (escenario base vs estrés), diferencia potencial, supuestos, procedencia de tasa y, cuando aplica, impacto presupuestario demo.
-- **Técnico:** agente LLM con *function/tool calling*, verificación determinista, contratos trazables, fallback honesto y ejecución reproducible.
-- **Alcance MVP:** corredor **EUR → KES (Kenia)**, 2 escenarios, 2 tools principales, sin ejecución de pagos ni asesoría financiera vinculante.
-
-> **Nota sobre datos:** el MVP utiliza datos de **referencia/demo** por defecto (`FX_SOURCE=demo`, tasas ficticias identificadas con `is_mock`). Una referencia externa (p. ej. Frankfurter) no equivale a cotización firme ni precio ejecutable.
-
-## Propuesta de valor
+**Impact FX** ayuda a ONG y equipos de proyectos sociales a **anticipar el importe neto recibido en moneda local** ante variaciones de tipo de cambio y comisiones, reduciendo incertidumbre en la planificación y la comunicación con socios locales.
 
 | Para quién | Problema | Qué aporta Impact FX |
 |---|---|---|
 | ONG / gestores de proyectos | El importe recibido puede variar por FX y comisiones, afectando actividades y presupuesto | Estimación rápida y explicable del monto recibido y la diferencia bajo estrés |
 | Socios locales / coordinación | Falta de visibilidad compartida sobre supuestos y riesgos cambiarios | Respuesta integrada con cifras, supuestos, fuente/fecha y límites |
-| Equipos técnicos/demo | Necesidad de un MVP fiable y auditable en poco tiempo | Flujo determinista verificable, metadatos de ejecución y modos de degradación/fallback transparentes |
+| Equipos técnicos/demo | Necesidad de un MVP fiable y auditable | Flujo determinista verificable, metadatos de ejecución y modos de degradación transparentes |
 
-## Caso demo (golden case B1)
+### Caso demo (golden case B1)
 
-**Entrada:** 10.000 EUR → Kenia (KES), comisión 40 EUR, tasa ref. 145 KES/EUR (demo/ficticia), variación −3%  
+**Entrada:** 10.000 EUR → Kenia (KES), comisión 40 EUR, tasa ref. 145 KES/EUR (demo/ficticia), variación −3 %
+
 **Resultado esperado:**
+
 - **Base:** 1.444.200 KES
-- **Estrés (−3%):** 1.400.874 KES
+- **Estrés (−3 %):** 1.400.874 KES
 - **Diferencia:** 43.326 KES
-- **Impacto presupuestario demo (KE-HEALTH-001, sintético):** cobertura base 100%, estrés 97%, brecha 43.326 KES
+- **Impacto presupuestario demo (KE-HEALTH-001, sintético):** cobertura base 100 %, estrés 97 %, brecha 43.326 KES
 
-> Los valores se validan contra `data/processed/demo_scenarios.json` y el motor determinista.
+> Las cifras se validan contra `data/processed/demo_scenarios.json` y el motor determinista (tests + smoke en CI).
 
-## Arquitectura y flujo
+### Arquitectura y flujo
 
 ```text
 Usuario (Streamlit UI)
    │  POST /api/chat
    ▼
-FastAPI (validación, CORS, contrato de errores)
+FastAPI (validación, CORS, límite de tasa, request_id, contrato de errores)
    ▼
 Orquestador del agente (LLM + tool-calling + guardrails)
    ├─ get_fx_reference (tasa/fuente/fecha/is_mock)
@@ -71,219 +65,262 @@ Respuesta integrada (reply + agent.* trazable)
    └─ deterministic_fallback (sin LLM/tools simulados, fixtures demo)
 ```
 
-**Principios de diseño:** determinismo donde importa, trazabilidad contractual, honestidad en modos degradados/fallback y separación de responsabilidades FE/BE/agente/tools.
+**Principios de diseño:** determinismo donde importa, trazabilidad contractual, honestidad en modos degradados/fallback y separación de responsabilidades FE/BE/agente/tools. Los parámetros financieros **nunca** los decide el modelo: los fija el backend desde el contexto validado.
 
-## Características principales
+---
 
-### Producto
-- Simulación de transferencia con **2 escenarios** (base y estrés configurable).
-- Explicación en lenguaje claro con **supuestos explícitos** y límites (no cotización firme, no ejecución de pagos).
-- **Impacto presupuestario demo** determinista (agregado, sin atribución a partidas).
-- Manejo de casos clave: **B1** (happy path), **B2** (dato faltante), **B3** (petición fuera de alcance: no ejecutar pagos).
+## 2. Requisitos previos
 
-### Técnico
-- **API REST** (`/api/health`, `/api/chat`) con contrato estable y errores normalizados (`400/422/502`).
-- **Agente con tools** (whitelist) y verificación de procedencia FX/cálculo antes de exponer resultados.
-- **Metadatos trazables:** `tools_used`, `execution_mode`, `degraded`, `is_fallback`, `fx_source`, `fx_reference`, `calculation_source`, `budget_impact` (cuando aplica).
-- **Fallback determinista** honesto desde `demo_scenarios.json` (sin fingir LLM ni tools).
-- **FX configurable:** `FX_SOURCE=demo` (determinista) o referencia externa/live según configuración (sin equivaler a cotización ejecutable).
-- **Calidad:** validación de datos, tests backend/lógica, CI (validate + unit tests + smoke).
+- **Python >= 3.11** (probado en 3.11 y 3.13)
+- **Node.js >= 18** (para `scripts/validate-data.mjs` y la validación de datos en CI)
+- **Docker + Docker Compose** (opcional, recomendado para una demo reproducible)
+- **API key LLM** (opcional): sin clave, el backend responde en **fallback determinista** cuando existe un escenario coincidente.
 
-## Stack tecnológico
+---
 
-| Capa | Tecnologías |
-|---|---|
-| Frontend | Streamlit, Plotly, Requests |
-| Backend | FastAPI, Uvicorn, Pydantic, python-dotenv |
-| Agente / LLM | Orquestación propia, tool-calling (Groq / OpenAI-compatible) |
-| Datos / contratos | JSON fixtures (`data/processed`), esquemas, contratos compartidos (`shared/contracts`, `docs/api-contract.md`) |
-| Calidad / CI | `unittest`, `scripts/validate-data.mjs`, GitHub Actions |
-| Ejecución | Python 3.10+, Node.js 18+ (validación de datos), Docker / Docker Compose |
+## 3. Instalación
 
-## Estructura del repositorio
+Las dependencias se fijan con `pip-compile`: `*.in` contiene los rangos declarados y `*.txt` el lockfile reproducible.
 
-```text
-impact-fx/
-├─ backend/                 # API FastAPI, orquestador del agente, tools y servicios
-├─ frontend/                # UI Streamlit (formulario, resultados, preview local)
-├─ data/
-│  ├─ raw/                  # fuentes originales (si aplica)
-│  ├─ processed/            # fixtures/golden cases (fuente de verdad demo)
-│  └─ schemas/              # esquemas de datos
-├─ shared/contracts/        # contratos compartidos API/tools
-├─ docs/                    # arquitectura, contrato, agente, benchmark, ODS, demo, roadmap, etc.
-├─ scripts/                 # validación, smoke tests y utilidades
-├─ tests/                   # tests unitarios/integración de lógica
-├─ docs/assets/             # recursos visuales (banner)
-├─ .streamlit/              # configuración Streamlit
-├─ streamlit_app.py         # entrypoint para Streamlit Cloud (wrapper de frontend/app.py)
-├─ Dockerfile.backend
-├─ Dockerfile.frontend
-└─ docker-compose.yml
+```bash
+# Backend + herramientas de calidad (tests, ruff, mypy, pip-audit)
+pip install -r backend/requirements.txt -r dev-requirements.txt
+
+# Frontend (Streamlit)
+pip install -r requirements.txt
 ```
 
-## Requisitos previos
+> Para cambiar una dependencia: edita el `.in` correspondiente y regenera el lockfile (ver [§8](#8-calidad-y-verificación)).
 
-- **Python >= 3.10** (recomendado 3.11)
-- **Node.js >= 18** (validación de datos / CI local de fixtures)
-- **Git**
-- **Docker + Docker Compose** (opcional, recomendado para demo reproducible)
-- **API key LLM** (opcional): para flujo `llm_tools` real. Sin clave, el backend puede responder en **fallback determinista** cuando exista escenario coincidente.
+### Configuración
 
-## Configuración
+1. Copia la plantilla de entorno y completa los valores (nunca commitear `.env`):
 
-1. Clona el repositorio y entra en la carpeta del proyecto.
-2. Crea tu `.env` desde la plantilla (no commitear `.env`):
    ```bash
-   # Linux/macOS
-   cp .env.example .env
-
-   # Windows (PowerShell)
-   Copy-Item .env.example .env
+   cp .env.example .env          # Linux/macOS
+   Copy-Item .env.example .env   # Windows (PowerShell)
    ```
-3. Variables principales:
 
-| Variable | Descripción | Ejemplo / default |
+2. Variables principales:
+
+| Variable | Descripción | Default |
 |---|---|---|
-| `LLM_PROVIDER` | Proveedor LLM | `groq` |
-| `LLM_API_KEY` | Clave del proveedor | *(vacío para fallback)* |
-| `LLM_MODEL` | Modelo | según proveedor |
+| `APP_ENV` | Entorno (`development`/`production`) | `development` |
+| `LOG_LEVEL` / `LOG_FORMAT` | Nivel y formato del log (`json`/`text`) | `INFO` / `json` |
+| `LLM_PROVIDER` | Proveedor LLM (`groq`, `openai`, compatibles) | `groq` |
+| `LLM_API_KEY` | Clave del proveedor | *(vacío → fallback)* |
+| `LLM_MODEL` | Modelo | `openai/gpt-oss-20b` |
 | `LLM_BASE_URL` | Base URL OpenAI-compatible (opcional) | vacío |
-| `PORT` | Puerto backend | `3001` |
-| `CORS_ORIGIN` | Origen permitido frontend | `http://localhost:8501` |
-| `API_BASE_URL` | URL backend consumida por frontend | `http://localhost:3001` |
-| `FX_SOURCE` | Fuente FX (`demo` u otra según config) | `demo` |
+| `LLM_TIMEOUT_SECONDS` / `LLM_MAX_RETRIES` | Timeout y reintentos del proveedor | `25` / `1` |
+| `PORT` | Puerto del backend | `3001` |
+| `CORS_ORIGIN` | Orígenes permitidos (separados por coma) | `http://localhost:8501` |
+| `RATE_LIMIT_ENABLED` / `RATE_LIMIT_REQUESTS` / `RATE_LIMIT_WINDOW_SECONDS` | Límite de tasa de `/api/chat` | `true` / `30` / `60` |
+| `MAX_HISTORY_MESSAGES` | Máximo de mensajes de `history` aceptados | `20` |
+| `API_BASE_URL` / `API_TIMEOUT` | Backend que consume el frontend | `http://localhost:3001` / `60` |
+| `FX_SOURCE` | Fuente de tasas (`demo`/`live`) | `demo` |
 
-> El backend carga configuración desde `.env` (raíz o `backend/.env`).
+> El backend carga la configuración desde `.env` (raíz o `backend/.env`).
 
-## Ejecución local
+---
 
 > ¿Solo frontend en la nube? Ver [Despliegue del frontend en Streamlit Community Cloud](docs/deploy-streamlit-cloud.md) (entrypoint: `streamlit_app.py` o `frontend/app.py`).
 
-### 1) Backend (FastAPI)
-Desde la **raíz del repositorio**:
+## 4. Ejecución local
+
+### 4.1 Backend (FastAPI)
+
 ```bash
-pip install -r backend/requirements.txt
 uvicorn backend.src.main:app --reload --port 3001
 ```
-- Health: `GET http://localhost:3001/api/health` → `{ "status": "ok" }`
-- Chat: `POST http://localhost:3001/api/chat`
 
-### 2) Frontend (Streamlit)
-En otra terminal:
+- Health: `GET http://localhost:3001/api/health` → `{ "status": "ok" }`
+- Readiness: `GET http://localhost:3001/api/ready`
+- Chat: `POST http://localhost:3001/api/chat`
+- Documentación interactiva: `http://localhost:3001/api/docs`
+
+### 4.2 Frontend (Streamlit)
+
 ```bash
-pip install -r requirements.txt
 streamlit run frontend/app.py
 ```
-(o `streamlit run streamlit_app.py`)
 
-- UI: `http://localhost:8501`
-- Si el backend no está disponible, la UI puede mostrar **preview local** (ilustrativo, sin backend/tools reales).
+- App: `http://localhost:8501`
+- Si el backend no está disponible, la UI muestra un **preview local** (ilustrativo, sin backend ni tools reales).
 
-### 3) Docker Compose (demo reproducible)
+### 4.3 Docker Compose (demo reproducible)
+
 ```bash
 docker compose config
 docker compose up --build -d
 docker compose ps
+docker compose logs -f backend frontend
+docker compose down
 ```
-- Backend: `http://127.0.0.1:3001` (`/api/health`)
-- Frontend: `http://127.0.0.1:8501`
-- Por defecto `FX_SOURCE=demo`. Sin `LLM_API_KEY`, puede operar en fallback determinista (si hay escenario coincidente).
-- Logs: `docker compose logs -f backend frontend`
-- Parada: `docker compose down`
 
-> No incluir `.env`/secretos en imágenes. No exponer la demo local como despliegue de producción.
+- Backend: `http://127.0.0.1:3001` · Frontend: `http://127.0.0.1:8501`
+- Por defecto `FX_SOURCE=demo` (determinista) y 2 workers de Uvicorn.
+- No incluir `.env` ni secretos en las imágenes. La configuración de demo local no es un despliegue de producción.
 
-## API (resumen)
+---
+
+## 5. API
 
 | Endpoint | Método | Descripción |
 |---|---|---|
-| `/api/health` | `GET` | Estado del servicio (`{ "status": "ok" }`) |
-| `/api/chat` | `POST` | Simulación conversacional/estructurada con respuesta integrada |
+| `/api/health` | `GET` | Liveness del proceso (`{ "status": "ok" }`) |
+| `/api/ready` | `GET` | Readiness: datos y dependencias críticas |
+| `/api/version` | `GET` | Versión y entorno del servicio |
+| `/api/chat` | `POST` | Simulación conversacional/estructurada |
 
-**Request (`POST /api/chat`) – campos clave:** `message`, `context` (`amount_eur`, `destination_country`, `currency`, `fee_eur?`, `scenario_drop_pct?`, `project_budget?`), `history?`.
+**Request (`POST /api/chat`):** `message`, `context` (`amount_eur`, `destination_country`, `currency`, `fee_eur?`, `scenario_drop_pct?`, `project_budget?`), `history?`.
 
-**Response (`200`) – campos principales:**
-- `reply`: explicación integrada en lenguaje claro.
-- `agent`: `tools_used`, `reasoning_summary`, `scenarios`, `difference`, `assumptions`, `alerts`, `execution_mode`, `degraded`, `is_fallback`, `fx_source`, `fx_reference`, `calculation_source`, `budget_impact?`.
+**Response (`200`):** `reply` y `agent` con `tools_used`, `reasoning_summary`, `scenarios`, `difference`, `assumptions`, `alerts`, `execution_mode`, `degraded`, `is_fallback`, `fx_source`, `fx_reference`, `calculation_source` y `budget_impact?`.
 
-**Errores normalizados:**
-- `400` `invalid_input` / `BAD_REQUEST`
-- `422` `missing_data` / `UNPROCESSABLE` (p. ej. B2, sin inventar cifras)
-- `502` `upstream_failure` / `LLM_OR_TOOL_ERROR` (mensaje público sanitizado)
+**Errores normalizados** (`{error, code, details}`):
 
-**Comportamiento relevante (MVP):**
-- Corredor soportado: **EUR → KES** (`KE`/`KES`).
-- `context.project_budget` se acepta, pero en MVP **no se aplica** al cálculo de `budget_impact` (se usa presupuesto demo fijo KE-HEALTH-001 cuando aplica).
+| Código | Cuándo |
+|---|---|
+| `400` `invalid_input` / `BAD_REQUEST` | Mensaje vacío, corredor no soportado, comisión > importe, `history` excesivo |
+| `422` `missing_data` / `UNPROCESSABLE` | Faltan datos mínimos (no se inventan cifras) |
+| `429` `rate_limited` / `TOO_MANY_REQUESTS` | Se ha superado el límite de peticiones por cliente |
+| `502` `upstream_failure` / `LLM_OR_TOOL_ERROR` | Fallo del LLM/tools (mensaje público sanitizado) |
+
+**Cabecera de correlación:** toda respuesta incluye `X-Request-ID`; aparece también en los logs estructurados.
+
+**Comportamiento clave:**
+
+- El corredor soportado se lee de `data/processed/corridors.json` (matriz de cobertura en datos, no en código).
+- Si falta `fee_eur` y existe regla para la moneda, se aplica la comisión de `data/processed/fee_rules.json`.
 - Sin LLM o sin verificación completa, el sistema prioriza respuestas honestas: degradación sin escenarios no verificados o **fallback determinista** con `tools_used=[]`, `is_fallback=true`, `fx_reference=null`.
+- `context.project_budget` se acepta; mientras el MVP no lo aplica, la respuesta incluye un `alert` explícito.
 
-Documentación completa: [`docs/api-contract.md`](docs/api-contract.md) · [`shared/contracts/contracts.md`](shared/contracts/contracts.md)
+Detalle completo en [`docs/api-contract.md`](docs/api-contract.md) · [`shared/contracts/contracts.md`](shared/contracts/contracts.md).
 
-## Agente y herramientas
+---
 
-- **System prompt y diseño:** [`backend/src/agent/system_prompt.txt`](backend/src/agent/system_prompt.txt), [`docs/agent-design.md`](docs/agent-design.md)
+## 6. Agente y herramientas
+
+- **System prompt y diseño:** [`backend/src/agent/system_prompt.txt`](backend/src/agent/system_prompt.txt) · [`docs/agent-design.md`](docs/agent-design.md)
 - **Tools (function calling, whitelist):**
   - `get_fx_reference(base, quote, date?)` → `{ rate, source, date, is_mock }`
   - `calculate_transfer_scenarios(amount_eur, rate, fee_eur, variations[], currency)` → escenarios, importes recibidos y diferencia
-- **Fuente de verdad demo:** `data/processed/` (tasas, reglas, corredores, escenarios golden). Ver [`data/README.md`](data/README.md).
+- **Guardrails:** el modelo no puede fijar importe, tasa, comisión, moneda ni variación; el backend los liga al contexto validado y a la tasa verificada.
+- **Fuente de verdad demo:** `data/processed/` (tasas, reglas, corredores, presupuestos y escenarios golden). Ver [`data/README.md`](data/README.md).
 
-## Verificación y calidad
+---
 
-### Validación de datos
+## 7. Estructura del repositorio
+
+```text
+impact-fx/
+├─ backend/                 # API FastAPI, orquestación LLM, tools y servicios
+│  ├─ requirements.in/.txt  # rangos declarados + lockfile reproducible
+│  └─ src/
+│     ├─ agent/             # orquestador, prompt y esquemas de tools
+│     ├─ api/               # rutas, middleware (request_id) y contrato de errores
+│     ├─ config/            # configuración central por entorno
+│     ├─ core/              # logging JSON, contexto, limitador de tasa
+│     ├─ services/          # carga de datos con caché, impacto presupuestario
+│     └─ tools/             # get_fx_reference, calculate_transfer_scenarios
+├─ frontend/                # UI Streamlit (formulario, resultados, preview local)
+├─ data/
+│  ├─ raw/                  # fuentes originales (si aplica)
+│  ├─ processed/            # fixtures/golden cases (fuente de verdad del MVP)
+│  └─ schemas/              # esquemas de datos
+├─ shared/contracts/        # contratos API/tools compartidos
+├─ docs/                    # arquitectura, contrato, agente, benchmark, auditoría, ODS, demo
+├─ scripts/                 # validación de datos, smoke, checks de entorno
+├─ tests/                   # tests unitarios, de API HTTP y de servicios frontend
+├─ pyproject.toml           # configuración de ruff, mypy, pytest y coverage
+├─ .pre-commit-config.yaml  # hooks locales de calidad
+├─ Dockerfile.backend / .frontend
+└─ docker-compose.yml
+```
+
+---
+
+## 8. Calidad y verificación
+
+### Comandos
+
 ```bash
+# Suite de tests (46 tests)
+pytest tests -q
+
+# Cobertura (umbral configurado en pyproject.toml: 60 %)
+coverage run --source=backend,frontend -m pytest tests -q && coverage report
+
+# Lint y formato
+ruff check .
+ruff format --check .
+
+# Tipado estático
+mypy backend
+
+# Validación de datos
 node scripts/validate-data.mjs
-```
 
-### Tests backend (unitarios / lógica)
-```bash
-pip install -r backend/requirements.txt
-python -m unittest discover -s tests -v
-```
+# Smoke test de la API (con el backend arrancado)
+python scripts/smoke_backend.py
 
-### Verificación de entorno y LLM (opcional)
-```bash
+# Comprobación de entorno y LLM (opcional)
 python scripts/check_env.py
 ```
 
-### Smoke test API
-Con el backend en ejecución:
+### Puertas de calidad en CI (`.github/workflows/ci.yml`)
+
+| Job | Qué garantiza |
+|---|---|
+| `validate` | Los datos procesados y los golden cases son coherentes |
+| `lint` | `ruff check` + `ruff format --check` |
+| `typecheck` | `mypy backend` sin errores |
+| `backend-tests` | Tests + cobertura (≥ 60 %) en Python 3.11 y 3.13 |
+| `backend-smoke` | El backend arranca y responde el caso B1 |
+| `security` | `pip-audit` sobre los lockfiles (backend y frontend) |
+| `docker-build` | Las dos imágenes se construyen correctamente |
+
+Además: Dependabot (dependencias y acciones) y hooks locales con `pre-commit`.
+
+### Regenerar los lockfiles
+
 ```bash
-python scripts/smoke_backend.py
+pip install pip-tools
+pip-compile --strip-extras -o backend/requirements.txt backend/requirements.in
+pip-compile --strip-extras -o requirements.txt requirements.in
+pip-compile --strip-extras -o dev-requirements.txt dev-requirements.in
 ```
 
-### CI (GitHub Actions)
-Workflow: `.github/workflows/ci.yml`
-- Validación de datos (`node scripts/validate-data.mjs`)
-- Tests unitarios backend (`python -m unittest discover -s tests -v`)
-- Smoke test backend (health + chat B1)
+---
 
-## Documentación
-
-**Inicio rápido / entrega:** [Guía día D](docs/day-of-execution-guide.md) · [Roadmap y backlog](docs/roadmap-backlog.md)
+## 9. Documentación
 
 | Área | Documentos |
 |---|---|
-| Producto y diseño | [Arquitectura](docs/architecture.md) · [Contrato API](docs/api-contract.md) · [Diseño del agente](docs/agent-design.md) · [ODS](docs/ods-justification.md) |
-| Planificación y seguimiento | [Roadmap](docs/roadmap.md) · [Backlog](docs/backlog.md) · [Roles y tareas](docs/roles-tasks.md) · [Decision log](docs/decision-log.md) · [Pendientes reto](docs/pendientes-reto.md) |
-| Calidad y demo | [Benchmark](docs/benchmark.md) · [Interacciones](docs/interactions.md) · [Guion demo](docs/demo-script.md) · [Despliegue Streamlit Cloud](docs/deploy-streamlit-cloud.md) |
-| Técnica / operación | [Live FX](docs/live-fx.md) · [Workflow GitHub](docs/workflow-github.md) · [Deuda técnica](docs/tech-debt.md) |
+| **Auditoría y escalado** | [Auditoría técnica y plan de escalado](docs/audit-escalado.md) |
+| Producto y diseño | [Arquitectura](docs/architecture.md) · [Contrato API](docs/api-contract.md) · [Diseño del agente](docs/agent-design.md) · [Justificación ODS](docs/ods-justification.md) |
+| Planificación | [Roadmap](docs/roadmap.md) · [Backlog](docs/backlog.md) · [Roles y tareas](docs/roles-tasks.md) · [Decision log](docs/decision-log.md) · [Pendientes del reto](docs/pendientes-reto.md) |
+| Calidad y entrega | [Benchmark](docs/benchmark.md) · [Interacciones con razonamiento](docs/interactions.md) · [Guion de demo](docs/demo-script.md) · [Guía del día D](docs/day-of-execution-guide.md) |
+| Técnica y operación | [Live FX](docs/live-fx.md) · [Workflow GitHub](docs/workflow-github.md) · [Deuda técnica](docs/tech-debt.md) · [Despliegue en Streamlit Cloud](docs/deploy-streamlit-cloud.md) |
 
-## Estado actual y limitaciones (MVP)
+---
 
-- **Listo:** núcleo backend/frontend, tools deterministas, hardening del orquestador, metadatos trazables, fallback honesto, Docker/CI, documentación y configuración base para despliegue del frontend.
-- **Pendiente de cierre (equipo/entorno):** E2E UI con capturas reales, ejecución Docker runtime con evidencia en contenedores, validación con LLM real en entorno de demo final, despliegue/ensayo final según aplique.
-- **Limitaciones conocidas:** corredor y presupuesto demo acotados, `context.project_budget` no aplicado al cálculo en MVP, tasas de referencia (demo/externa) no equivalen a cotización ejecutable.
+## 10. Estado actual y limitaciones
 
-## Equipo
+- **Listo:** núcleo backend/frontend, tools deterministas, guardrails, metadatos trazables, fallback honesto, rate limiting, observabilidad básica, Docker, CI con puertas de calidad, tests y documentación.
+- **Limitaciones conocidas:** corredor MVP acotado (EUR→KES), `context.project_budget` no se aplica todavía (se avisa en la respuesta), tasas de referencia (demo o Frankfurter) que no son cotización ejecutable, límite de tasa en memoria (por proceso) y sin persistencia ni identidad de usuario.
+- **Siguiente paso:** plan por fases en [`docs/audit-escalado.md`](docs/audit-escalado.md) (métricas y trazas, caché de FX, rate limit compartido, presupuesto real, versionado de API).
 
-**Grupo 1**
+---
+
+## 11. Equipo (Grupo 1)
+
 - **Juan Manuel** — Backend, API, LLM/orquestación
 - **Laura** — Frontend, UX
 - **Gema** — Agente, herramientas, prompt
-- **José Melo** — Datos, integración, deploy, demo/documentación
+- **José Melo** — Datos, integración, despliegue, demo y documentación
 
-**Mentores:** Maya Petranova (técnica), Jesús Cal y Laura Mateus (ESG)
+Mentores: Maya Petranova (técnica), Jesús Cal y Laura Mateus (ESG).
 
 ## Licencia
 
-Distribuido bajo licencia **MIT**. Ver [`LICENSE`](LICENSE).
+MIT. Ver [`LICENSE`](LICENSE).

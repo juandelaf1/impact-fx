@@ -9,9 +9,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
   validate:
-    name: Validate data & golden cases
+    name: Validar datos & golden cases
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,13 +28,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Validate processed data
+      - name: Validar processed data
         run: node scripts/validate-data.mjs
 
-  backend-tests:
-    name: Backend unit tests
+  lint:
+    name: Lint & formato (ruff)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,13 +43,69 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            dev-requirements.txt
 
-      - name: Install backend dependencies
-        run: pip install -r backend/requirements.txt
+      - name: Install dependencias de calidad
+        run: pip install -r dev-requirements.txt
 
-      - name: Run unit tests
-        run: python -m unittest discover -s tests -v
+      - name: ruff check
+        run: ruff check .
+
+      - name: ruff format --check
+        run: ruff format --check .
+
+  typecheck:
+    name: Tipado estático (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencias
+        run: pip install -r backend/requirements.txt -r dev-requirements.txt
+
+      - name: mypy
+        run: mypy backend
+
+  backend-tests:
+    name: Tests backend + cobertura
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            dev-requirements.txt
+
+      - name: Install dependencias (lockfile reproducible)
+        run: pip install -r backend/requirements.txt -r dev-requirements.txt
+
+      - name: Tests con cobertura
+        run: coverage run --source=backend,frontend -m pytest tests -q
+
+      - name: Informe de cobertura
+        run: coverage report --fail-under=60
 
   backend-smoke:
     name: Backend smoke test (health + chat B1)
@@ -53,7 +117,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install backend dependencies
         run: pip install -r backend/requirements.txt
@@ -73,5 +139,57 @@ jobs:
         if: failure()
         run: cat /tmp/uvicorn.log
 
-  # Extender cuando se cierre el stack (D-003):
-  # - lint/test/build frontend
+  security:
+    name: Auditoría de dependencias (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install pip-audit
+        run: pip install -r dev-requirements.txt
+
+      - name: Auditar backend
+        run: pip-audit -r backend/requirements.txt --strict
+
+      - name: Auditar frontend
+        run: pip-audit -r requirements.txt --strict
+
+  docker-build:
+    name: Build de imágenes Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: false
+          load: true
+          tags: impact-fx-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.frontend
+          push: false
+          load: true
+          tags: impact-fx-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

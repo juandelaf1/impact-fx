@@ -4,7 +4,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 
-
 # Buscamos el .env en la raíz del proyecto.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")

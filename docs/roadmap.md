@@ -46,6 +46,20 @@ Entregar un MVP demostrable que cumpla todos los requisitos del reto: agente con
 ### Fase 5 — Evolución (opcional, futuro)
 - Adaptador de tasas reales (API) con fallback, failover entre proveedores LLM, más corredores, `assess_budget_impact` completo, tests automatizados, hardening de seguridad y observabilidad.
 
+### Fase 6 — Profesionalización y escalado (2026-11-13 en adelante)
+- **Objetivo:** convertir el MVP en un proyecto operable, reproducible y mantenible, y preparar el salto a producto.
+- **Estado:** [~] Fase 0 completada; Fase 1 en planificación.
+- **Hitos:**
+  - [x] H6.1 Blindaje operativo: límite de tasa, `request_id`, logs JSON, sondas liveness/readiness/version.
+  - [x] H6.2 Calidad automática: 46 tests, cobertura 40 %→64 %, ruff, mypy, pre-commit, CI con 7 jobs, `pip-audit`, Dependabot.
+  - [x] H6.3 Reproducibilidad: lockfiles `pip-compile` (backend, frontend, dev) y Docker con usuario no root, workers y healthchecks.
+  - [x] H6.4 Contrato documentado con las extensiones aditivas (429, `/api/ready`, `/api/version`, `X-Request-ID`) y deuda técnica actualizada.
+  - [ ] H6.5 Observabilidad avanzada: métricas y trazas (OpenTelemetry + Prometheus) y alertas sobre tasa de `fallback`.
+  - [ ] H6.6 Resiliencia: caché de FX con TTL y *circuit breaker*; límite de tasa compartido (Redis) para despliegue horizontal.
+  - [ ] H6.7 Producto: aplicar el presupuesto real del usuario (`S1`) y versionado de API (`/api/v1`).
+  - [ ] H6.8 industrialized: SBOM, escaneo de imágenes, `CHANGELOG`, releases y responsables reales en `CODEOWNERS`.
+- **Detalle:** [`audit-escalado.md`](audit-escalado.md).
+
 ## Dependencias críticas (ruta crítica)
 `Decisiones (stack/LLM)` → `Datos + Contratos congelados` → `Tools + Prompt + Backend LLM` / `UI` (paralelo) → `Integración (ciclo completo)` → `Benchmark` → `Deploy/Docs` → `Demo`.
 
