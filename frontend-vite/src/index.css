@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-950: #002020;
+  --color-brand-900: #103030;
+  --color-brand-800: #104040;
+  --color-brand-700: #1b5a5a;
+  --color-brand-600: #2a6b6b;
+  --color-brand-500: #3f8282;
+  --color-brand-100: #e6f1f1;
+  --color-brand-50: #f2f8f8;
+  --color-surface: #f7f9f9;
+  --color-ink: #0f172a;
+}
+
 :root {
   color-scheme: light;
 }
@@ -11,6 +24,6 @@ html, body, #root {
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: #f6f7f9;
-  color: #0f172a;
+  background: var(--color-surface);
+  color: var(--color-ink);
 }

@@ -66,7 +66,7 @@ function fmtNumber(value: number | undefined, digits = 0) {
 
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'slate'; children: string }) {
   const tones = {
-    green: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+    green: 'bg-brand-50 text-brand-900 ring-brand-800/20',
     amber: 'bg-amber-50 text-amber-900 ring-amber-200',
     red: 'bg-rose-50 text-rose-800 ring-rose-200',
     slate: 'bg-slate-100 text-slate-700 ring-slate-200',
@@ -164,17 +164,21 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Impact FX</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Nueva UI (Vite + React + TypeScript + Tailwind)</h1>
-            <p className="mt-1 max-w-3xl text-sm text-slate-600">
-              Simulación de impacto EUR→KES con trazabilidad. Tasas y resultados de referencia/demo (no cotización ejecutable ni ejecución de pagos).
-            </p>
+        <header className="mb-6 rounded-2xl border border-brand-900/10 bg-gradient-to-r from-brand-950 via-brand-900 to-brand-800 p-6 text-white shadow-sm sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-100/90">Impact FX · Ayuda a ONGs</p>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Simulador de impacto de transferencias</h1>
+              <p className="mt-2 max-w-3xl text-sm text-brand-50/90">
+                Transparencia para decisiones EUR→KES: estima cuánto recibe el socio local, compara escenarios y muestra supuestos, límites y trazabilidad. Referencia/demo, no cotización ejecutable ni ejecución de pagos.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs text-brand-50 backdrop-blur">
+              API: <code className="font-mono text-white">{API_BASE_URL}</code>
+            </div>
           </div>
-          <div className="text-xs text-slate-500">API: <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700">{API_BASE_URL}</code></div>
         </header>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -214,7 +218,7 @@ export default function App() {
               <button
                 type="submit"
                 disabled={loading || !message.trim()}
-                className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 {loading ? 'Calculando…' : 'Simular impacto'}
               </button>
