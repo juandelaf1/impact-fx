@@ -23,25 +23,25 @@ Entregar un MVP demostrable que cumpla todos los requisitos del reto: agente con
 
 ### Fase 2 — Ejecución día D (integración y verificación)
 - **Objetivo:** MVP integrado y verificado.
-- **Estado:** [~] En curso (backend y frontend base disponibles; integración final pendiente).
+- **Estado:** [x] Completada (post-MVP; MVP/demo presentado ayer).
 - **Hitos (timebox):**
   - [x] H2.1 Entorno backend operativo (`/health`, carga de datos, CI con validación/tests/smoke).
   - [x] H2.2 Núcleo técnico implementado: 2 tools, orquestación tool-calling, UI Streamlit operativa.
-  - [ ] H2.3 **Ciclo completo** end-to-end (caso Kenia) — *hito de control*.
-  - [ ] H2.4 B1–B3 en verde en flujo integrado, respuesta integrada y manejo de errores validado.
-  - [ ] H2.5 URL desplegada (o plan B) y entregables documentales cerrados.
-  - [ ] H2.6 Ensayo de demo y plan B verificado.
-- **Salida esperada:** MVP desplegado/funcional + docs + ≥3 interacciones reales.
+  - [x] H2.3 **Ciclo completo** end-to-end (caso Kenia) — verificado a nivel API/lógica y demo; evidencia UI/capturas finales pendiente de consolidar.
+  - [x] H2.4 B1–B3 validados en contrato/lógica (B1 OK, B2 422 `missing_data`, B3 sin ejecución de pagos) y respuesta integrada con metadatos.
+  - [~] H2.5 URL desplegada (o plan B) y entregables documentales cerrados — plan B/fallback disponible; despliegue público y cierre documental con evidencias finales pendientes.
+  - [x] H2.6 Ensayo/demo y plan B verificado (demo presentada).
+- **Salida:** MVP funcional con fallback/plan B, docs y contratos actualizados; evidencias E2E visuales/despliegue final por consolidar.
 
 ### Fase 3 — Demo y evaluación (día D)
 - **Objetivo:** demostrar valor y cumplimiento de requisitos.
-- **Estado:** [ ] Pendiente.
-- **Hitos:** presentación 8–10 min, ciclo completo en vivo, Q&A.
+- **Estado:** [x] Completada (MVP presentado ayer).
+- **Hitos:** presentación realizada, ciclo completo mostrado, Q&A (según sesión de demo).
 
 ### Fase 4 — Cierre y handover (post-reto)
 - **Objetivo:** consolidar aprendizaje y dejar el proyecto mantenible.
-- **Estado:** [ ] Pendiente.
-- **Hitos:** registrar feedback, actualizar `decision-log.md` y `docs/tech-debt.md`, backlog de evolución.
+- **Estado:** [~] En curso.
+- **Hitos:** registrar feedback, actualizar `decision-log.md` y `docs/tech-debt.md`, consolidar evidencias/entregables y backlog de evolución.
 
 ### Fase 5 — Evolución (opcional, futuro)
 - Adaptador de tasas reales (API) con fallback, failover entre proveedores LLM, más corredores, `assess_budget_impact` completo, tests automatizados, hardening de seguridad y observabilidad.

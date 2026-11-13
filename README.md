@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/Node.js-18%2B%20(data%20validation)-339933?logo=nodedotjs&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Tests-46%20passing%20%7C%20coverage%2064%25-success" alt="Tests y cobertura" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License MIT" /></a>
-  <img src="https://img.shields.io/badge/Status-MVP%20operativo-orange" alt="Status MVP" />
+  <img src="https://img.shields.io/badge/Status-MVP%20presentado%20(post--reto)-orange" alt="Status" />
   <img src="https://img.shields.io/badge/ODS-9%20%7C%2010%20%7C%2017-0a7ea4" alt="ODS 9,10,17" />
 </p>
 
@@ -306,9 +306,11 @@ pip-compile --strip-extras -o dev-requirements.txt dev-requirements.in
 
 ## 10. Estado actual y limitaciones
 
-- **Listo:** núcleo backend/frontend, tools deterministas, guardrails, metadatos trazables, fallback honesto, rate limiting, observabilidad básica, Docker, CI con puertas de calidad, tests y documentación.
-- **Limitaciones conocidas:** corredor MVP acotado (EUR→KES), `context.project_budget` no se aplica todavía (se avisa en la respuesta), tasas de referencia (demo o Frankfurter) que no son cotización ejecutable, límite de tasa en memoria (por proceso) y sin persistencia ni identidad de usuario.
-- **Siguiente paso:** plan por fases en [`docs/audit-escalado.md`](docs/audit-escalado.md) (métricas y trazas, caché de FX, rate limit compartido, presupuesto real, versionado de API).
+- **Estado:** MVP del reto **presentado** (post-demo). `main` en verde en CI; integrados hardening, metadatos trazables, fallback honesto, Docker y profesionalización Fase 0 (ver [PR #40](https://github.com/juandelaf1/impact-fx/pull/40) y [`docs/audit-escalado.md`](docs/audit-escalado.md)).
+- **Listo:** núcleo backend/frontend, tools deterministas, guardrails, contrato trazable, rate limiting, observabilidad básica (`X-Request-ID`, logs JSON, `/api/ready`, `/api/version`), CI con calidad/cobertura, tests y documentación.
+- **Pendiente de cierre:** evidencias E2E con capturas, validación Docker runtime con evidencia, ajustes UI (`fx_reference` prominente, distinción degradado vs fallback), validación con LLM real en entorno final y despliegue público verificado.
+- **Limitaciones conocidas:** corredor MVP acotado (EUR→KES), `context.project_budget` no se aplica todavía (se avisa), tasas de referencia (demo/Frankfurter) no son cotización ejecutable, límite de tasa en memoria (por proceso), `FX_SOURCE=live` sin caché/TTL/circuit breaker, sin métricas/trazas ni persistencia.
+- **Siguiente paso (Fase 1):** caché FX con TTL+circuit breaker, rate limit compartido (Redis), métricas/trazas, aplicar presupuesto real, pruebas de carga, SBOM/escaneo+digest y versionado `/api/v1` (detalle en [`docs/audit-escalado.md`](docs/audit-escalado.md)).
 
 ---
 

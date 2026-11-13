@@ -21,9 +21,9 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 | M9 | Frontend: formulario, vista resultados (2 escenarios, diferencia, supuestos, `tools_used`), estados carga/error, consumo API real | Laura | M4 | [~] | UI Streamlit implementada; pendiente validación final contra backend real en todos los casos (incl. 422/alertas) y despliegue |
 | M10 | Integración end-to-end (caso Kenia) | Todos | M8,M9 | [x] | Ciclo completo integrado documentado (PR #23); mantener verificación en entorno final de demo |
 | M11 | Benchmark B1–B3 en verde y manejo básico de datos faltantes/ámbito | José (coord.), Gema, Juan | M10 | [x] | B1–B3 documentados en benchmark/interacciones (PR #23); confirmar evidencias finales en entorno de entrega |
-| M12 | Despliegue (URL) o plan B local verificado; CORS/env correctos | José, Juan | M10 | [ ] | App accesible y operativa |
-| M13 | Entregables documentales: README ejecutable, `ods-justification`, doc técnica (stack/endpoints/prompt/tools), **≥3 interacciones con razonamiento** | José, Gema | M10,M11 | [~] | Documentación técnica/README avanzados; faltan merge final de docs, evidencias integradas consolidadas y cierre de entregables |
-| M14 | Guion de demo 8–10 min y ensayo | Todos (coord. José) | M12,M13 | [ ] | Demo fluida mostrando ciclo completo y plan B |
+| M12 | Despliegue (URL) o plan B local verificado; CORS/env correctos | José, Juan | M10 | [~] | Plan B (fallback determinista/preview local) y Docker/CI disponibles; URL pública final y verificación de entorno objetivo pendientes |
+| M13 | Entregables documentales: README ejecutable, `ods-justification`, doc técnica (stack/endpoints/prompt/tools), **≥3 interacciones con razonamiento** | José, Gema | M10,M11 | [~] | Documentación técnica/README/contratos avanzados y actualizados; faltan evidencias finales consolidadas (capturas E2E, interacciones reales finales) y cierre de entregables |
+| M14 | Guion de demo 8–10 min y ensayo | Todos (coord. José) | M12,M13 | [x] | Demo presentada (MVP ayer) con guion/plan B; consolidar aprendizajes/evidencias en docs de cierre |
 
 ## Should — Solo si el Must está estable y desplegado
 | ID | Tarea | Responsable | Dependencias | Estado | Criterio de aceptación |
