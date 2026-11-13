@@ -223,6 +223,7 @@ impact-fx/
 │     ├─ services/          # carga de datos con caché, impacto presupuestario
 │     └─ tools/             # get_fx_reference, calculate_transfer_scenarios
 ├─ frontend/                # UI Streamlit (formulario, resultados, preview local)
+├─ frontend-vite/           # Nueva UI Vite + React + TS + Tailwind (en desarrollo)
 ├─ data/
 │  ├─ raw/                  # fuentes originales (si aplica)
 │  ├─ processed/            # fixtures/golden cases (fuente de verdad del MVP)
