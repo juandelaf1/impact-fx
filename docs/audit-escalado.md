@@ -69,7 +69,7 @@ Severidad: **P0** bloqueante para producción · **P1** necesario para escalar �
 | P1-3 | Cliente LLM sin `timeout`, sin reintentos: una caída del proveedor colgaba la petición. | Requests colgados, coste de infraestructura | **Resuelto**: timeout por cliente, reintentos con backoff exponencial solo ante errores transitorios (429/5xx/timeout) |
 | P1-4 | `history` sin límite: cualquier cliente podía inflar el prompt (coste de tokens) y el contexto. | Coste y superficie de prompt injection | **Resuelto**: `MAX_HISTORY_MESSAGES` (rechazo `400`) y recorte del historial enviado al LLM |
 | P1-5 | `/api/health` devolvía `ok` siempre: no distinguía proceso vivo de servicio sano. | Sondas de orquestador dan falso positivo | **Resuelto**: `/api/health` (liveness), `/api/ready` (dependencias), `/api/version` |
-| P1-6 | `FX_SOURCE=live` consulta Frankfurter en cada petición, sin caché, TTL ni *circuit breaker*. | Latencia, fragilidad y posible violación de las condiciones del proveedor | **Pendiente** — P1-c (ver §5) |
+| P1-6 | `FX_SOURCE=live` sin caché/TTL/circuit breaker activos por defecto. | Latencia, fragilidad y llamadas repetidas si se habilita live sin ajustes | **Parcial** - mecanismo configurable implementado en `get_fx_reference` (`FX_CACHE_TTL_SECONDS`, `FX_CIRCUIT_BREAKER_*`, por defecto off); pendiente habilitar/validar en entorno (ver §5) |
 | P1-7 | El limitador de tasa es por proceso: con varias réplicas el límite real se multiplica. | Abuso no controlable en despliegue horizontal | **Pendiente** — requiere backend compartido (Redis) con la misma interfaz |
 | P1-8 | Sin métricas ni trazas distribuidas; no hay forma de medir latencia, tasa de *fallback* o coste por petición. | No se puede ni operar ni justificar el coste | **Pendiente** — OpenTelemetry + exporter Prometheus |
 | P1-9 | Sin SBOM, escaneo de imágenes ni digest fijado en la imagen base. | Trazabilidad de la cadena de suministro incompleta | **Pendiente** — trivy/syft en CI + digest de `python:3.11-slim` |
@@ -123,7 +123,7 @@ Cerrar P0 y el núcleo de P1. Resultado: el proyecto se puede desplegar en un en
 | Entregable | Objetivo |
 |---|---|
 | **Métricas + trazas** (OpenTelemetry → Prometheus/Grafana) | Latencia p50/p95, tasa de `fallback`, ratio de degraded, llamadas al LLM por petición, coste estimado |
-| **Caché de FX con TTL + *circuit breaker*** | Eliminar llamadas repetidas a Frankfurter y degradar con elegancia ante caída del proveedor |
+| **Caché de FX con TTL + *circuit breaker*** (mecanismo implementado, pendiente activar/validar) | Eliminar llamadas repetidas a Frankfurter y degradar con elegancia ante caída del proveedor |
 | **Rate limit compartido (Redis)** | Límite real con varias réplicas; necesario antes de escalar horizontalmente |
 | **Presupuesto real del usuario** (cierra `S1` y P2-1) | Aplicar `context.project_budget` con reglas por prioridad y alertas por partida |
 | **Pruebas de carga** (k6/Locust) | Objetivo de latencia y de coste por petición, y verificación del límite de tasa |

@@ -67,7 +67,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecho · `[!]` bloqueado
 | ID | Tarea | Estado | Criterio de aceptación |
 |---|---|---|---|
 | P1.1 | Métricas y trazas (OpenTelemetry → Prometheus) | [ ] | Latencia p50/p95, tasa de `fallback`, llamadas al LLM por petición |
-| P1.2 | Caché de FX con TTL + *circuit breaker* | [ ] | Sin llamadas repetidas a Frankfurter; degradación limpia si el proveedor cae |
+| P1.2 | Caché de FX con TTL + *circuit breaker* | [~] | Mecanismo implementado en `get_fx_reference` (caché en memoria de respuestas live exitosas, TTL y circuit breaker configurables por entorno; por defecto desactivados para compatibilidad). Pendiente: habilitar/ajustar en entorno y validar con `FX_SOURCE=live`. |
 | P1.3 | Límite de tasa compartido (Redis) | [ ] | Límite efectivo con varias réplicas; misma interfaz `RateLimiter` |
 | P1.4 | Presupuesto real del usuario (cierra `S1`) | [ ] | `context.project_budget` se aplica con reglas por prioridad y alertas por partida |
 | P1.5 | Pruebas de carga (k6/Locust) | [ ] | Objetivos de latencia y coste por petición; verificación del límite de tasa |

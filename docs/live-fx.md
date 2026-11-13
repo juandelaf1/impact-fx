@@ -20,5 +20,20 @@ consultando exclusivamente los datos locales. Si falla la API al pedir hoy, el
 fallback exige un dato local de ese mismo día; no utiliza otra fecha en silencio.
 Otros valores de `FX_SOURCE` producen un error de configuración.
 
+## Caché y circuit breaker (opcional, `live`)
+
+Para mejorar resiliencia y evitar llamadas repetidas al proveedor, la herramienta
+soporta (desactivados por defecto para preservar compatibilidad):
+
+- `FX_CACHE_TTL_SECONDS` (default `0`): TTL en segundos de la caché en memoria
+  para respuestas **exitosas** de Frankfurter (última referencia por par).
+- `FX_CIRCUIT_BREAKER_FAILURE_THRESHOLD` (default `0`): nº de fallos consecutivos
+  para abrir el circuito (0 desactiva).
+- `FX_CIRCUIT_BREAKER_COOLDOWN_SECONDS` (default `30`): tiempo de enfriamiento
+  antes de reintentar el proveedor.
+
+Con el circuito abierto, se evita la llamada externa y se aplica el mismo fallback
+local documentado. La caché/circuit breaker son en memoria (por proceso).
+
 Las pruebas de API simulan respuestas y fallos sin depender de internet:
 `python -m unittest discover -s tests -v`.

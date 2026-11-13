@@ -2,10 +2,12 @@ import json
 import math
 import os
 import re
+import time
 import warnings
 from datetime import date as calendar_date
 from http.client import HTTPException
 from pathlib import Path
+from threading import Lock
 from urllib.request import urlopen
 
 # Localizamos la raíz del proyecto desde este archivo:
@@ -17,6 +19,107 @@ from urllib.request import urlopen
 # Así podemos encontrar los datos aunque ejecutemos Python
 # desde una carpeta distinta.
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "processed"
+
+# Caché/circuit breaker en memoria para consultas live (Frankfurter).
+# Por defecto desactivados (TTL=0, threshold=0) para preservar comportamiento
+# determinista y compatibilidad con tests existentes.
+_FX_CACHE: dict[tuple[str, str], tuple[float, dict]] = {}
+_FX_CB_FAILURES = 0
+_FX_CB_OPEN_UNTIL = 0.0
+_FX_LOCK = Lock()
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _fx_cache_ttl_seconds() -> int:
+    return max(0, _env_int("FX_CACHE_TTL_SECONDS", 0))
+
+
+def _fx_cb_failure_threshold() -> int:
+    return max(0, _env_int("FX_CIRCUIT_BREAKER_FAILURE_THRESHOLD", 0))
+
+
+def _fx_cb_cooldown_seconds() -> int:
+    return max(0, _env_int("FX_CIRCUIT_BREAKER_COOLDOWN_SECONDS", 30))
+
+
+def reset_fx_runtime_state() -> None:
+    """Limpia caché y estado del circuit breaker (útil en tests/procesos)."""
+
+    global _FX_CB_FAILURES, _FX_CB_OPEN_UNTIL
+    with _FX_LOCK:
+        _FX_CACHE.clear()
+        _FX_CB_FAILURES = 0
+        _FX_CB_OPEN_UNTIL = 0.0
+
+
+def _cache_get(base: str, quote: str) -> dict | None:
+    ttl = _fx_cache_ttl_seconds()
+    if ttl <= 0:
+        return None
+    key = (base, quote)
+    now = time.monotonic()
+    with _FX_LOCK:
+        entry = _FX_CACHE.get(key)
+        if not entry:
+            return None
+        expires_at, payload = entry
+        if expires_at <= now:
+            _FX_CACHE.pop(key, None)
+            return None
+        return dict(payload)
+
+
+def _cache_set(base: str, quote: str, payload: dict) -> None:
+    ttl = _fx_cache_ttl_seconds()
+    if ttl <= 0:
+        return
+    with _FX_LOCK:
+        _FX_CACHE[(base, quote)] = (time.monotonic() + ttl, dict(payload))
+
+
+def _cb_allow_call() -> bool:
+    threshold = _fx_cb_failure_threshold()
+    if threshold <= 0:
+        return True
+    now = time.monotonic()
+    with _FX_LOCK:
+        if _FX_CB_OPEN_UNTIL > now:
+            return False
+        if _FX_CB_OPEN_UNTIL and _FX_CB_OPEN_UNTIL <= now:
+            # Fin de cooldown: permitir intento de half-open implícito.
+            _FX_CB_OPEN_UNTIL = 0.0
+            _FX_CB_FAILURES = 0
+    return True
+
+
+def _cb_record_success() -> None:
+    global _FX_CB_FAILURES, _FX_CB_OPEN_UNTIL
+    threshold = _fx_cb_failure_threshold()
+    if threshold <= 0:
+        return
+    with _FX_LOCK:
+        _FX_CB_FAILURES = 0
+        _FX_CB_OPEN_UNTIL = 0.0
+
+
+def _cb_record_failure() -> None:
+    global _FX_CB_FAILURES, _FX_CB_OPEN_UNTIL
+    threshold = _fx_cb_failure_threshold()
+    if threshold <= 0:
+        return
+    with _FX_LOCK:
+        _FX_CB_FAILURES += 1
+        if _FX_CB_FAILURES >= threshold:
+            _FX_CB_OPEN_UNTIL = time.monotonic() + _fx_cb_cooldown_seconds()
 
 
 def fetch_frankfurter_rate(base: str, quote: str) -> dict:
@@ -108,19 +211,35 @@ def get_fx_reference(
     # En modo live, hoy y sin fecha consultan la última referencia publicada.
     # Conservamos su fecha real, que puede ser anterior a hoy.
     if fx_source == "live" and (date is None or date == calendar_date.today().isoformat()):
-        try:
-            # Consultamos la API externa.
-            return fetch_frankfurter_rate(base, quote)
+        cached = _cache_get(base, quote)
+        if cached is not None:
+            return cached
 
-        # Si la API falla, capturamos el error.
-        except (ConnectionError, ValueError) as error:
-            # Mostramos una advertencia en la terminal.
+        if not _cb_allow_call():
             warnings.warn(
-                f"Frankfurter no disponible: {error}. "
+                "Frankfurter no disponible: circuito abierto temporalmente (circuit breaker). "
                 "Se intentarán usar datos ficticios de demostración.",
                 RuntimeWarning,
                 stacklevel=2,
             )
+        else:
+            try:
+                # Consultamos la API externa.
+                result = fetch_frankfurter_rate(base, quote)
+                _cb_record_success()
+                _cache_set(base, quote, result)
+                return result
+
+            # Si la API falla, capturamos el error.
+            except (ConnectionError, ValueError) as error:
+                _cb_record_failure()
+                # Mostramos una advertencia en la terminal.
+                warnings.warn(
+                    f"Frankfurter no disponible: {error}. "
+                    "Se intentarán usar datos ficticios de demostración.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
             # Continuamos con el JSON local, que devuelve
             # is_mock=True para identificar los datos ficticios.
