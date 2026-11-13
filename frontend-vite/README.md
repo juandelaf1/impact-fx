@@ -30,12 +30,13 @@ npm run build
 npm run preview
 ```
 
-## Funcionalidades incluidas (MVP UI)
-- Formulario de simulación (`message` + contexto: monto, país/moneda, comisión, caída %).
-- Consumo de `POST /api/chat` y manejo de errores HTTP/contrato.
-- Visualización de respuesta integrada, `execution_mode`/`degraded`/`is_fallback`.
-- **`fx_reference` prominente** (tasa, fuente, fecha, `is_mock`) y distinción fallback determinista vs degradado.
-- Escenarios, diferencia, impacto presupuestario (demo), supuestos, alertas y `tools_used`.
+## Funcionalidades incluidas
+- **Ejemplos rápidos (B1/B2/B3):** precarga de casos clave (simulación completa, dato faltante, fuera de ámbito) para uso intuitivo.
+- **Formulario claro:** mensaje + contexto (monto, país/moneda, comisión, caída %) con acciones de limpiar y comprobación de estado de API (`/api/health`).
+- **Consumo de `POST /api/chat`:** manejo de respuestas y errores HTTP/contrato (p. ej. 422) con feedback legible.
+- **Trazabilidad y confianza:** `execution_mode`/`degraded`/`is_fallback`, **`fx_reference` prominente** (tasa, fuente, fecha, `is_mock`) y distinción entre fallback determinista y degradado.
+- **Resultados útiles para ONGs:** escenarios base/estrés, diferencia potencial, **comparación visual simple**, impacto presupuestario (demo), supuestos, alertas y `tools_used`.
+- **Utilidades:** copiar resumen de la simulación e historial local reciente (navegador). Simulación orientativa: sin ejecución de pagos ni cotización firme.
 
 ## Notas
 - La UI **no ejecuta pagos**; tasas/resultados son de referencia/demo/orientativos.
