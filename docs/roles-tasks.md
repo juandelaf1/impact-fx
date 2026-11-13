@@ -44,19 +44,26 @@
 
 ## Tareas por fase
 
-### Preparación (antes del jueves)
-- **Juan Manuel:** boilerplate backend (`/health`, carga datos, cliente LLM por `.env`, esqueleto `/api/chat`), CORS/validación base, probar smoke test *function calling*, preparar despliegue back.
-- **Laura:** boilerplate frontend en Streamlit (`app.py`, formulario + vista escenarios/diferencia/supuestos con mock), estados carga/error, llamada a la API (`API_BASE_URL`), preparar despliegue front.
-- **Gema:** system prompt (borrador final), firmas JSON de tools, criterios de decisión, plantilla de 3 interacciones, revisión de contrato de tools.
-- **José Melo:** repo/estructura, `data/processed` + `demo_scenarios` validados, `data/README` y esquemas, contratos compartidos, docs base (arquitectura, benchmark, ODS, demo, tech-debt, roadmap/backlog/decision-log), preparar deploy.
-- **Todos:** confirmar roles, cerrar D-003/D-004/D-009, revisar checklist go/no-go.
+### Preparación (antes del jueves) — completada
+- **Juan Manuel:** boilerplate backend (`/health`, carga datos, cliente LLM por `.env`, esqueleto `/api/chat`), CORS/validación base, smoke *function calling*, preparación de despliegue.
+- **Laura:** boilerplate frontend Streamlit (formulario, vista de escenarios/diferencia/supuestos, estados y consumo API), preparación de despliegue.
+- **Gema:** system prompt, firmas JSON de tools, criterios de decisión, revisión de contratos/tools.
+- **José Melo:** repo/estructura, `data/processed` + `demo_scenarios` validados, esquemas/contratos compartidos, documentación base, preparación de demo/deploy.
+- **Todos:** roles confirmados, decisiones clave registradas y checklist revisado.
 
-### Día D (4–5 h)
-- **Juan Manuel:** endpoint `/api/chat` y orquestación LLM+tools, errores/validación, soporte deploy/CORS.
-- **Laura:** UI final conectada a API real, presentación clara de escenarios/diferencia/supuestos/`tools_used`, estados.
-- **Gema:** implementación `get_fx_reference` y `calculate_transfer_scenarios`, ajuste prompt, verificación de decisiones del agente y respuestas integradas.
-- **José Melo:** coordinación de integración, ejecución benchmark B1–B3, deploy, README/ODS/doc técnica, captura de ≥3 interacciones, guion y tiempos de demo.
-- **Todos:** integración end-to-end, pruebas, ensayo.
+### Día D (4–5 h) — completado (MVP presentado)
+- **Juan Manuel:** endpoint `/api/chat`, orquestación LLM+tools, errores/validación y hardening.
+- **Laura:** UI conectada a API, presentación de resultados/supuestos/metadatos y estados.
+- **Gema:** implementación/ajuste de tools y prompt, verificación de decisiones y respuestas integradas.
+- **José Melo:** coordinación de integración, benchmark B1–B3, documentación/evidencias y guion/demo.
+- **Todos:** integración end-to-end, pruebas y demo (plan B disponible).
+
+### Post-MVP / cierre y escalado (actual)
+- **Juan Manuel:** estabilidad backend/CI, fixes de compatibilidad/despliegue, soporte a Fase 1 (caché FX, rate limit compartido, métricas/trazas, versionado API) según backlog.
+- **Laura:** ajustes UI pendientes (`fx_reference` prominente, distinción degradado vs fallback), validación E2E en Streamlit y capturas.
+- **Gema:** validación/refinamiento de prompt y comportamiento del agente con LLM real en entorno final; apoyo en evidencias de interacciones.
+- **José Melo:** consolidación de evidencias/entregables (`benchmark`, `interactions`, demo), despliegue/ensayo final y sincronización documental/proyecto.
+- **Todos:** cerrar pendientes post-MVP, mantener contrato/datos como fuente de verdad y priorizar Fase 1 (`docs/audit-escalado.md`).
 
 ## Acuerdos de trabajo
 - **Comunicación:** avisar bloqueos de inmediato; cambios de contrato/esquema solo con acuerdo.
