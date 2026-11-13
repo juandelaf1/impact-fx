@@ -363,8 +363,9 @@ export default function App() {
                 ))}
               </div>
 
-              <label className="block text-sm font-medium text-slate-700">Mensaje para el agente</label>
+              <label htmlFor="sim-message" className="block text-sm font-medium text-slate-700">Mensaje para el agente</label>
               <textarea
+                id="sim-message"
                 className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100"
                 rows={5}
                 value={message}
@@ -374,24 +375,24 @@ export default function App() {
 
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600">Monto (EUR)</label>
-                  <input type="number" min="0" step="0.01" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={amountEur} onChange={(e) => setAmountEur(e.target.value)} placeholder="10000" />
+                  <label htmlFor="sim-amount" className="block text-xs font-medium text-slate-600">Monto (EUR)</label>
+                  <input id="sim-amount" type="number" min="0" step="0.01" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={amountEur} onChange={(e) => setAmountEur(e.target.value)} placeholder="10000" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600">Comisión (EUR)</label>
-                  <input type="number" min="0" step="0.01" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={feeEur} onChange={(e) => setFeeEur(e.target.value)} placeholder="40" />
+                  <label htmlFor="sim-fee" className="block text-xs font-medium text-slate-600">Comisión (EUR)</label>
+                  <input id="sim-fee" type="number" min="0" step="0.01" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={feeEur} onChange={(e) => setFeeEur(e.target.value)} placeholder="40" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600">País destino</label>
-                  <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={destinationCountry} onChange={(e) => setDestinationCountry(e.target.value)} placeholder="KE" />
+                  <label htmlFor="sim-country" className="block text-xs font-medium text-slate-600">País destino</label>
+                  <input id="sim-country" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={destinationCountry} onChange={(e) => setDestinationCountry(e.target.value)} placeholder="KE" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600">Moneda</label>
-                  <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="KES" />
+                  <label htmlFor="sim-currency" className="block text-xs font-medium text-slate-600">Moneda</label>
+                  <input id="sim-currency" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="KES" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-slate-600">Caída escenario adverso (%)</label>
-                  <input type="number" min="0" step="0.1" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={scenarioDropPct} onChange={(e) => setScenarioDropPct(e.target.value)} placeholder="3" />
+                  <label htmlFor="sim-drop" className="block text-xs font-medium text-slate-600">Caída escenario adverso (%)</label>
+                  <input id="sim-drop" type="number" min="0" step="0.1" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100" value={scenarioDropPct} onChange={(e) => setScenarioDropPct(e.target.value)} placeholder="3" />
                 </div>
               </div>
 
